@@ -1,22 +1,301 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    padding: 0;
-    background: #111;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(circle at top, #26114b 0, #050417 40%, #02000b 100%);
     color: #fff;
-    font-family: Arial, sans-serif;
 }
 
+/* Контейнер приложения (макс ширина под телефон) */
 .app {
-    padding: 20px;
-    text-align: center;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 16px 16px 32px;
+    position: relative;
 }
 
-button {
-    padding: 12px 20px;
-    margin-top: 20px;
-    background: orange;
+/* Лёгкие "звезды" на фоне */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.35) 0, transparent 60%),
+        radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0, transparent 60%),
+        radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,0.25) 0, transparent 60%),
+        radial-gradient(1px 1px at 60% 60%, rgba(255,255,255,0.2) 0, transparent 60%);
+    opacity: 0.4;
+    z-index: -1;
+}
+
+/* TOP BAR */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    margin-top: 8px;
+}
+
+.logo-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-text {
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f7b2ff;
+    text-shadow: 0 0 14px rgba(255, 144, 255, 0.9);
+}
+
+.logo-sub {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.top-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chip {
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    padding: 4px 10px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chip-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #d0ffd0;
+    box-shadow: 0 0 6px #86ff86;
+}
+
+.icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
     border: none;
-    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 16px;
     cursor: pointer;
+    color: #fff;
+}
+
+/* DATE ROW */
+.date-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 8px;
+}
+
+.date-chip {
+    border-radius: 20px;
+    border: none;
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.icon-calendar {
+    font-size: 15px;
+}
+
+/* CONTENT */
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 4px;
+    padding-bottom: 72px; /* под нижнюю навигацию */
+}
+
+/* CARDS */
+.card {
+    border-radius: 24px;
+    background: rgba(8, 6, 26, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-big {
+    padding-block: 18px;
+}
+
+.card-aria {
+    background: radial-gradient(circle at top left, #ff5ce1 0, #9b4fff 40%, #2b104b 100%);
+}
+
+.card-city {
+    background: radial-gradient(circle at top left, #53b2ff 0, #2767ff 35%, #081a3b 100%);
+}
+
+.card-icon-wrap {
+    flex-shrink: 0;
+}
+
+.card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.card-sub {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* Слайдер ЗАКАЗ */
+.card-slider {
+    background: rgba(13, 10, 40, 0.9);
+}
+
+.dots {
+    position: absolute;
+    right: 16px;
+    bottom: 12px;
+    display: flex;
+    gap: 4px;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.3);
+}
+.dot.active {
+    width: 10px;
+    background: #f6c94a;
+}
+
+/* SMALL CARDS */
+.small-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.small-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 12px 10px;
+    background: rgba(10, 7, 35, 0.95);
+    cursor: pointer;
+}
+
+.small-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 17px;
+}
+
+.small-title {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.small-sub {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* BOTTOM NAV */
+.bottom-nav {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 8px;
+    width: 100%;
+    max-width: 480px;
+    padding: 8px 20px 10px;
+    display: flex;
+    justify-content: space-between;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    backdrop-filter: blur(20px);
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: #aaa5ff;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+}
+
+.nav-icon {
+    font-size: 18px;
+}
+
+.nav-item.active .nav-label {
+    color: #ffd84d;
+    font-weight: 600;
+}
+.nav-item.active .nav-icon {
+    filter: drop-shadow(0 0 4px rgba(255, 216, 77, 0.7));
+}
+
+/* Адаптивность */
+@media (max-width: 360px) {
+    .logo-text {
+        font-size: 20px;
+    }
+    .card-title {
+        font-size: 16px;
+    }
 }
