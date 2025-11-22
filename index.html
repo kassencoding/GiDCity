@@ -3,19 +3,115 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GiDCity Mini App</title>
+    <title>GiDCity</title>
+
+    <!-- Шрифт (можно убрать, если не нужен) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="style.css" />
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
     <div class="app">
-        <h1>GiDCity Mini App</h1>
-        <p>Если ты это видишь — приложение работает!</p>
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="logo-block">
+                <div class="logo-text">GiDCity</div>
+                <div class="logo-sub">Karaganda, -1°C</div>
+            </div>
+            <div class="top-right">
+                <button class="chip">
+                    <span class="chip-dot"></span>
+                    Rork
+                </button>
+                <button class="icon-btn" aria-label="Уведомления">🔔</button>
+                <button class="icon-btn" aria-label="Настройки">⚙️</button>
+            </div>
+        </header>
 
-        <button id="btn">Отправить данные в Telegram</button>
+        <!-- DATE ROW -->
+        <div class="date-row">
+            <button class="date-chip">
+                <span class="icon-calendar">📅</span>
+                <span>Nov 22</span>
+            </button>
+        </div>
+
+        <!-- MAIN CARDS -->
+        <main class="content">
+            <!-- Чат с Aria -->
+            <section class="card card-big card-aria">
+                <div class="card-icon-wrap">
+                    <div class="card-icon">✨</div>
+                </div>
+                <div class="card-text">
+                    <div class="card-title">Чат с Aria</div>
+                    <div class="card-sub">Привет, как я могу помочь?</div>
+                </div>
+            </section>
+
+            <!-- ЗАКАЗ -->
+            <section class="card card-slider">
+                <div class="card-icon-wrap">
+                    <div class="card-icon">📦</div>
+                </div>
+                <div class="card-text">
+                    <div class="card-title">ЗАКАЗ</div>
+                    <div class="card-sub">Создать запрос</div>
+                </div>
+                <div class="dots">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+            </section>
+
+            <!-- Городской чат -->
+            <section class="card card-big card-city">
+                <div class="card-icon-wrap">
+                    <div class="card-icon">💬</div>
+                </div>
+                <div class="card-text">
+                    <div class="card-title">Городской чат</div>
+                    <div class="card-sub">Лента вашего города</div>
+                </div>
+            </section>
+
+            <!-- Small cards row -->
+            <section class="small-cards">
+                <button class="card small-card">
+                    <div class="card-icon small-icon">💬</div>
+                    <div class="small-title">Мессенджер</div>
+                    <div class="small-sub">Диалоги</div>
+                </button>
+                <button class="card small-card">
+                    <div class="card-icon small-icon">👛</div>
+                    <div class="small-title">Кошелек</div>
+                    <div class="small-sub">Баланс</div>
+                </button>
+                <button class="card small-card">
+                    <div class="card-icon small-icon">📰</div>
+                    <div class="small-title">GiD News</div>
+                    <div class="small-sub">Latest updates</div>
+                </button>
+            </section>
+        </main>
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <button class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">УСЛУГИ</span>
+            </button>
+            <button class="nav-item">
+                <span class="nav-icon">🧳</span>
+                <span class="nav-label">РАБОТА</span>
+            </button>
+        </nav>
     </div>
 
     <script src="script.js"></script>
