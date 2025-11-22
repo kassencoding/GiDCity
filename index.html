@@ -1,24 +1,23 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GiDCity</title>
+    <title>GiDCity Mini App</title>
+    <link rel="stylesheet" href="style.css" />
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
 
-    <link rel="stylesheet" href="style.css" />
+<body>
+    <div class="app">
+        <h1>GiDCity Mini App</h1>
+        <p>Если ты это видишь — приложение работает!</p>
 
-    <!-- React -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  </head>
+        <button id="btn">Отправить данные в Telegram</button>
+    </div>
 
-  <body>
-    <div id="root">Загрузка...</div>
-
-    <script type="text/babel" src="app.js"></script>
-  </body>
+    <script src="script.js"></script>
+</body>
 </html>
