@@ -1,8 +1,8 @@
 :root {
     --bg-dark: #000000;
-    --glass: rgba(20, 20, 28, 0.85);
+    --glass: rgba(20, 20, 28, 0.9); /* Сделал чуть плотнее для читаемости */
     --glass-card: rgba(255, 255, 255, 0.08);
-    --border: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.15);
     --accent: #0a84ff;
     --accent-gold: #FFD700;
     --text-muted: rgba(255, 255, 255, 0.55);
@@ -10,40 +10,66 @@
     --safe-bottom: env(safe-area-inset-bottom);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+}
 
 body {
     background: var(--bg-dark);
     color: #fff;
     font-family: 'SF Pro Display', -apple-system, sans-serif;
     height: 100dvh;
+    width: 100vw;
     overflow: hidden;
     position: relative;
 }
 
+/* --- ФОН --- */
 #background-layer {
-    position: absolute; inset: 0; z-index: 0;
+    position: absolute; 
+    inset: 0; 
+    z-index: 0;
     background: radial-gradient(circle at 50% 30%, #1e1e2d, #000000 90%);
 }
 
 .cyber-grid {
-    position: absolute; inset: 0; opacity: 0.15;
+    position: absolute; 
+    inset: 0; 
+    opacity: 0.05; /* Уменьшил с 0.15, чтобы сетка не перекрывала текст (ошибка на скринах) */
     background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
     background-size: 50px 50px;
     transform: perspective(600px) rotateX(25deg) scale(1.2);
+    pointer-events: none;
 }
 
+/* --- ЭФФЕКТЫ СТЕКЛА --- */
 .glass-morphism {
     background: var(--glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
     border: 1px solid var(--border);
 }
 
+/* --- HEADER (ИСПРАВЛЕНО ДЛЯ TELEGRAM) --- */
 .top-bar {
-    position: absolute; top: 0; left: 0; width: 100%; z-index: 50;
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    z-index: 100; /* Поднял z-index, чтобы быть выше всех экранов */
     padding: 10px 20px;
-    padding-top: max(60px, env(safe-area-inset-top)); 
-    background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-    display: flex; flex-direction: column; align-items: center;
+    /* Увеличил отступ до 85px, чтобы контент не попадал под кнопки 'Закрыть' и '...' */
+    padding-top: max(85px, env(safe-area-inset-top)); 
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.5) 70%, transparent);
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+}
+
+/* Добавил отступ для контента внутри экранов, чтобы он не залезал под хедер */
+.view {
+    padding-top: 150px !important; 
 }
