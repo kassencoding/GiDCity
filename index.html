@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Aitax SuperApp</title>
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -27,7 +27,7 @@
         </div>
         <div class="brand-row">
             <div class="logo">Aitax</div>
-            <button class="btn-icon glass-effect" id="btn-settings">
+            <button class="btn-icon glass-effect" id="btn-settings" onclick="openSidebar()">
                 <ion-icon name="options"></ion-icon>
             </button>
         </div>
@@ -39,7 +39,7 @@
             <div class="feed-composer glass-morphism">
                 <div class="composer-top">
                     <div class="avatar-circle">R</div>
-                    <input type="text" placeholder="Что происходит в городе?" class="clean-input">
+                    <input type="text" placeholder="Поделитесь..." class="clean-input">
                 </div>
                 <div class="composer-bot">
                     <button class="btn-att"><ion-icon name="images-outline"></ion-icon></button>
@@ -60,27 +60,25 @@
                         <span><ion-icon name="chatbubble-outline"></ion-icon> 4</span>
                     </div>
                 </div>
-                <div class="post-card glass-morphism">
-                    <div class="post-head">
-                        <div class="avatar-mini" style="background: #5ac8fa;">K</div>
-                        <span class="name">Kai</span>
-                        <span class="time">15м</span>
-                    </div>
-                    <div class="text">Кто потерял ключи на парковке Сити Молла? Оставил на охране.</div>
                 </div>
-            </div>
         </section>
 
         <section id="screen-map" class="view">
             <div class="map-wrapper">
-                <iframe src="https://maps.google.com/maps?q=Karaganda&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+                <iframe src="about:blank" id="map-frame"
                         width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                 
-                <button class="map-pin-sticker glass-effect" style="top:40%; left:30%" onclick="openModal('promo-burger')">
+                <button class="map-pin-sticker glass-effect" style="top:30%; left:20%" onclick="openModal('promo-burger')">
                     <span class="emoji">🍔</span> -20%
                 </button>
-                <button class="map-pin-sticker glass-effect" style="top:60%; left:70%" onclick="openModal('promo-cinema')">
+                <button class="map-pin-sticker glass-effect" style="top:55%; left:75%" onclick="openModal('promo-cinema')">
                     <span class="emoji">🎬</span> Кино
+                </button>
+                <button class="map-pin-sticker glass-effect" style="top:20%; left:60%">
+                    <span class="emoji">✂️</span> Барбер
+                </button>
+                <button class="map-pin-sticker glass-effect" style="top:70%; left:40%">
+                    <span class="emoji">💊</span> Аптека
                 </button>
             </div>
         </section>
@@ -91,7 +89,7 @@
                     <div class="ai-avatar">Ai</div>
                     <div class="msg-bubble">Привет! Я Aitax AI. <br>Нажми кнопку внизу, чтобы заказать такси, или <b>удерживай</b> её, чтобы сказать голосом.</div>
                 </div>
-                </div>
+            </div>
 
             <div class="order-panel glass-morphism">
                 <div class="panel-handle"></div>
@@ -111,7 +109,7 @@
                 <div class="options-row">
                     <div class="opt-box">
                         <span class="label">Цена (₸)</span>
-                        <input type="number" id="inp-price" placeholder="Предложи" class="clean-input num">
+                        <input type="number" id="inp-price" placeholder="Предложите" class="clean-input num">
                     </div>
                     <div class="opt-box">
                         <span class="label">Комментарий</span>
@@ -120,9 +118,9 @@
                 </div>
 
                 <div class="tariffs-row">
-                    <button class="tariff selected" onclick="setTariff(this)">Eco <br><span>800₸</span></button>
-                    <button class="tariff" onclick="setTariff(this)">Comf <br><span>1200₸</span></button>
-                    <button class="tariff lux" onclick="setTariff(this)">Lux <br><span>2500₸</span></button>
+                    <button class="tariff selected" onclick="setTariff(this)">Eco</button>
+                    <button class="tariff" onclick="setTariff(this)">Comf</button>
+                    <button class="tariff lux" onclick="setTariff(this)">Lux</button>
                 </div>
 
                 <button class="btn-go glow-anim">Поехали</button>
@@ -145,11 +143,6 @@
                     <div class="icon-box"><ion-icon name="car-sport"></ion-icon></div>
                     <div class="h-data"><span>Поездка Aitax</span><small>Сегодня, 14:00</small></div>
                     <div class="h-sum">-800 ₸</div>
-                </div>
-                 <div class="h-item glass-effect">
-                    <div class="icon-box green"><ion-icon name="add"></ion-icon></div>
-                    <div class="h-data"><span>Пополнение</span><small>Вчера, 10:30</small></div>
-                    <div class="h-sum green">+5000 ₸</div>
                 </div>
             </div>
         </section>
@@ -222,36 +215,10 @@
                     <div>Camry 70</div>
                     <small>15k ₸</small>
                 </div>
-                <div class="car-item">
-                    <div class="emoji-car">🚙</div>
-                    <div>Kia K5</div>
-                    <small>18k ₸</small>
-                </div>
             </div>
             <button class="btn-full">Забронировать</button>
         </div>
-
-        <div id="modal-pay" class="modal-card">
-            <div class="m-head"><h3>Пополнение</h3><button class="close-m">✕</button></div>
-            <input type="number" class="modal-inp" placeholder="Сумма (₸)">
-            <div class="card-chip">💳 Master Card •••• 8899</div>
-            <button class="btn-full">Оплатить</button>
         </div>
-
-        <div id="promo-burger" class="modal-card center-text">
-             <div class="m-head"><h3>Burger King</h3><button class="close-m">✕</button></div>
-             <div class="big-emoji">🍔</div>
-             <p>Покажи этот экран и получи скидку 20%!</p>
-        </div>
-        <div id="promo-cinema" class="modal-card center-text">
-             <div class="m-head"><h3>Kinopark</h3><button class="close-m">✕</button></div>
-             <div class="big-emoji">🍿</div>
-             <p>Попкорн в подарок к билету</p>
-        </div>
-
-        <div id="modal-out" class="modal-card"><div class="m-head"><h3>Вывод средств</h3><button class="close-m">✕</button></div></div>
-        <div id="modal-send" class="modal-card"><div class="m-head"><h3>Перевод</h3><button class="close-m">✕</button></div></div>
-    </div>
 
     <div id="sidebar-settings" class="sidebar">
         <div class="sidebar-head">
@@ -259,10 +226,10 @@
             <button class="close-side" onclick="closeSidebar()">✕</button>
         </div>
         <div class="set-list">
-            <div class="set-item"><ion-icon name="person-circle-outline"></ion-icon> Аккаунт</div>
-            <div class="set-item"><ion-icon name="globe-outline"></ion-icon> Город</div>
-            <div class="set-item"><ion-icon name="color-palette-outline"></ion-icon> Оформление</div>
-            <div class="set-item"><ion-icon name="help-circle-outline"></ion-icon> Поддержка</div>
+            <div class="set-item" onclick="alert('Аккаунт')"><ion-icon name="person-circle-outline"></ion-icon> Аккаунт</div>
+            <div class="set-item" onclick="alert('Город')"><ion-icon name="globe-outline"></ion-icon> Город</div>
+            <div class="set-item" onclick="alert('Оформление')"><ion-icon name="color-palette-outline"></ion-icon> Оформление</div>
+            <div class="set-item" onclick="alert('Поддержка')"><ion-icon name="help-circle-outline"></ion-icon> Поддержка</div>
         </div>
     </div>
 
