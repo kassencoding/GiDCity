@@ -1,75 +1,149 @@
 :root {
     --bg-dark: #000000;
-    --glass: rgba(20, 20, 28, 0.9); /* Сделал чуть плотнее для читаемости */
+    --glass: rgba(20, 20, 28, 0.9);
     --glass-card: rgba(255, 255, 255, 0.08);
     --border: rgba(255, 255, 255, 0.15);
     --accent: #0a84ff;
     --accent-gold: #FFD700;
     --text-muted: rgba(255, 255, 255, 0.55);
-    --dock-h: 80px;
-    --safe-bottom: env(safe-area-inset-bottom);
 }
 
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent; 
-}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
-    background: var(--bg-dark);
-    color: #fff;
+    background: var(--bg-dark); color: #fff;
     font-family: 'SF Pro Display', -apple-system, sans-serif;
-    height: 100dvh;
-    width: 100vw;
-    overflow: hidden;
-    position: relative;
+    height: 100dvh; width: 100vw; overflow: hidden; position: relative;
 }
 
-/* --- ФОН --- */
-#background-layer {
-    position: absolute; 
-    inset: 0; 
-    z-index: 0;
-    background: radial-gradient(circle at 50% 30%, #1e1e2d, #000000 90%);
-}
-
-.cyber-grid {
-    position: absolute; 
-    inset: 0; 
-    opacity: 0.05; /* Уменьшил с 0.15, чтобы сетка не перекрывала текст (ошибка на скринах) */
+/* ФОН И СЕТКА */
+#background-layer { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 30%, #1e1e2d, #000 90%); }
+.cyber-grid { 
+    position: absolute; inset: 0; opacity: 0.05; 
     background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
-    background-size: 50px 50px;
-    transform: perspective(600px) rotateX(25deg) scale(1.2);
-    pointer-events: none;
+    background-size: 50px 50px; transform: perspective(600px) rotateX(25deg) scale(1.2); pointer-events: none;
 }
 
-/* --- ЭФФЕКТЫ СТЕКЛА --- */
-.glass-morphism {
-    background: var(--glass);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid var(--border);
-}
+/* ЭФФЕКТЫ */
+.glass-morphism { background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--border); }
+.glass-effect { background: var(--glass-card); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
 
-/* --- HEADER (ИСПРАВЛЕНО ДЛЯ TELEGRAM) --- */
+/* HEADER (С отступом для Telegram) */
 .top-bar {
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    z-index: 100; /* Поднял z-index, чтобы быть выше всех экранов */
+    position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
     padding: 10px 20px;
-    /* Увеличил отступ до 85px, чтобы контент не попадал под кнопки 'Закрыть' и '...' */
     padding-top: max(85px, env(safe-area-inset-top)); 
     background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.5) 70%, transparent);
-    display: flex; 
-    flex-direction: column; 
-    align-items: center;
+    display: flex; flex-direction: column; align-items: center;
+}
+.status-row { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.brand-row { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 24px; font-weight: 800; }
+.btn-icon { width: 40px; height: 40px; border-radius: 50%; color: #fff; border: none; font-size: 20px; display: grid; place-items: center; }
+
+/* ЭКРАНЫ */
+.view { display: none; width: 100%; height: 100%; padding-top: 150px; padding-bottom: 100px; position: relative; z-index: 10; }
+.view.active { display: flex; flex-direction: column; }
+.custom-scroll { overflow-y: auto; scrollbar-width: none; }
+.custom-scroll::-webkit-scrollbar { display: none; }
+
+/* 1. SOCIAL */
+.feed-composer { width: calc(100% - 32px); margin: 0 auto 15px; padding: 15px 20px; border-radius: 20px; }
+.composer-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.avatar-circle { width: 36px; height: 36px; background: #333; border-radius: 50%; display: grid; place-items: center; }
+.clean-input { flex: 1; background: none; border: none; color: #fff; font-size: 16px; outline: none; }
+.composer-bot { display: flex; justify-content: space-between; }
+.btn-att { background: none; border: none; color: #fff; font-size: 22px; }
+.btn-post { background: var(--accent); color: #fff; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 600; }
+
+.feed-stream { padding: 0 16px; }
+.post-card { width: 100%; border-radius: 20px; padding: 15px; margin-bottom: 15px; }
+.post-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.avatar-mini { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; }
+.name { font-weight: 600; font-size: 15px; } .time { color: var(--text-muted); font-size: 12px; margin-left: auto; }
+.text { font-size: 15px; line-height: 1.4; margin-bottom: 10px; }
+.post-actions { display: flex; gap: 15px; color: var(--text-muted); font-size: 16px; }
+
+/* 2. MAP (Темная тема) */
+#screen-map { padding: 0; }
+.map-wrapper { width: 100%; height: 100%; background: #000; position: relative; }
+#map-frame { width: 100%; height: 100%; border: 0; filter: invert(90%) hue-rotate(180deg) brightness(0.6); }
+.map-pin-sticker { 
+    position: absolute; transform: translate(-50%, -50%);
+    padding: 8px 14px; border-radius: 14px; color: #fff; border: none; font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); filter: invert(100%) hue-rotate(-180deg); 
 }
 
-/* Добавил отступ для контента внутри экранов, чтобы он не залезал под хедер */
-.view {
-    padding-top: 150px !important; 
+/* 3. HOME (TAXI) */
+.chat-container { flex: 1; padding: 10px 20px; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 20px; }
+.ai-msg { display: flex; gap: 10px; margin-bottom: 15px; }
+.ai-avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 10px; display: grid; place-items: center; font-size: 12px; font-weight: bold; }
+.msg-bubble { background: rgba(255,255,255,0.1); padding: 12px 16px; border-radius: 18px 18px 18px 4px; font-size: 15px; line-height: 1.4; max-width: 85%; }
+
+.order-panel { 
+    background: var(--glass); border-radius: 30px 30px 0 0; padding: 10px 20px 20px; 
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.8); margin-bottom: 80px; /* Отступ под док */
 }
+.panel-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 15px; }
+.input-line { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.ic-blue { color: var(--accent); } .ic-red { color: #ff3b30; }
+.sep { height: 1px; background: rgba(255,255,255,0.1); margin: 5px 0 5px 28px; }
+.dim { color: var(--text-muted); font-size: 14px; } .bold { font-weight: 600; font-size: 17px; }
+.options-row { display: flex; gap: 10px; margin: 15px 0; }
+.opt-box { flex: 1; background: rgba(255,255,255,0.06); padding: 8px 12px; border-radius: 12px; }
+.label { font-size: 11px; color: var(--text-muted); display: block; }
+.num { font-size: 18px; font-weight: 700; }
+
+.tariffs-row { display: flex; gap: 8px; margin-bottom: 15px; }
+.tariff { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid transparent; color: var(--text-muted); padding: 12px; border-radius: 12px; font-weight: 600; text-align: center; }
+.tariff span { display: none; } /* Скрываем цены */
+.tariff.selected { background: rgba(10, 132, 255, 0.2); border-color: var(--accent); color: #fff; }
+.btn-go { width: 100%; background: var(--accent); color: #fff; padding: 16px; border-radius: 18px; border: none; font-size: 17px; font-weight: 700; }
+
+/* 4. WALLET & 5. PROFILE (Были потеряны) */
+.wallet-card, .rent-btn-card { border-radius: 24px; padding: 25px; margin: 0 20px 25px; }
+.w-amount { font-size: 36px; font-weight: 700; margin: 5px 0 20px; }
+.w-actions { display: flex; gap: 10px; }
+.w-actions button { flex: 1; background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 10px; border-radius: 12px; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.history-list, .orders-list { padding: 0 20px; }
+.h-item, .order-strip { display: flex; align-items: center; gap: 15px; padding: 15px; border-radius: 16px; margin-bottom: 10px; background: var(--glass-card); }
+.section-title { font-size: 18px; margin: 0 20px 15px; }
+.profile-head { display: flex; gap: 15px; padding: 0 20px; margin-bottom: 20px; }
+.stat { flex: 1; padding: 15px; border-radius: 16px; text-align: center; }
+.rent-btn-card { display: flex; align-items: center; justify-content: space-between; }
+.rent-info h3 { font-size: 18px; } .rent-img { font-size: 30px; }
+
+/* DOCK BAR */
+.dock-bar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    width: 90%; max-width: 420px; height: 75px; border-radius: 40px; 
+    display: flex; justify-content: space-between; align-items: center; padding: 0 10px; z-index: 1000;
+}
+.dock-btn { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 26px; }
+.dock-btn.active { color: var(--accent-gold); }
+.dock-center { position: relative; top: -25px; }
+.ai-big-btn {
+    width: 76px; height: 76px; border-radius: 50%; background: #15151a; 
+    border: 2px solid rgba(255,255,255,0.1); color: #fff; display: grid; place-items: center; 
+    font-weight: 800; font-size: 20px;
+}
+.ai-big-btn.active-mode { border-color: var(--accent-gold); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
+.ai-big-btn.listening { animation: pulse 1.5s infinite; border-color: var(--accent); }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(10,132,255,0.7); } 100% { box-shadow: 0 0 0 20px transparent; } }
+
+/* МОДАЛКИ И САЙДБАР */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+.hidden { opacity: 0; pointer-events: none; }
+.modal-card { background: #1c1c24; width: 85%; padding: 25px; border-radius: 24px; display: none; }
+.modal-card.active { display: block; animation: popIn 0.3s; }
+@keyframes popIn { from { transform: scale(0.9); } to { transform: scale(1); } }
+.m-head { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.close-m, .close-side { background: rgba(255,255,255,0.1); border: none; width: 30px; height: 30px; border-radius: 50%; color: #fff; }
+.btn-full { width: 100%; background: var(--accent); color: #fff; padding: 14px; border-radius: 16px; border: none; font-size: 16px; font-weight: 600; margin-top: 15px; }
+.cars-grid { display: flex; gap: 10px; }
+.car-item { flex: 1; background: #2c2c35; padding: 10px; border-radius: 12px; text-align: center; }
+.modal-inp { width: 100%; padding: 12px; background: #2c2c35; border: 1px solid var(--border); border-radius: 12px; color: #fff; text-align: center; }
+.sidebar { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #0a0a0f; z-index: 3000; transition: 0.4s; padding: 25px; border-left: 1px solid var(--border); }
+.sidebar.open { right: 0; }
+.sidebar-head { display: flex; justify-content: space-between; margin-top: 50px; margin-bottom: 30px; }
+.set-item { display: flex; gap: 15px; padding: 18px 0; border-bottom: 1px solid #1f1f27; }
