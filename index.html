@@ -1,118 +1,136 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GiDCity</title>
-
-    <!-- Шрифт (можно убрать, если не нужен) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="style.css" />
-
-    <!-- Telegram WebApp SDK -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GiDCity Taxi AI</title>
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="app">
-        <!-- TOP BAR -->
-        <header class="top-bar">
-            <div class="logo-block">
-                <div class="logo-text">GiDCity</div>
-                <div class="logo-sub">Karaganda, -1°C</div>
+
+    <div id="map-container">
+        <div class="ai-grid"></div> <div class="user-location-pulse"></div>
+    </div>
+
+    <div class="app-interface">
+        
+        <header class="glass-header">
+            <div class="profile-chip">
+                <div class="avatar">R</div>
+                <div class="status-col">
+                    <span class="u-name">Rork</span>
+                    <span class="u-loc">Karaganda • AI Active</span>
+                </div>
             </div>
-            <div class="top-right">
-                <button class="chip">
-                    <span class="chip-dot"></span>
-                    Rork
+            <div class="header-actions">
+                <button class="glass-btn-icon" id="btn-settings">
+                    <ion-icon name="options-outline"></ion-icon>
                 </button>
-                <button class="icon-btn" aria-label="Уведомления">🔔</button>
-                <button class="icon-btn" aria-label="Настройки">⚙️</button>
             </div>
         </header>
 
-        <!-- DATE ROW -->
-        <div class="date-row">
-            <button class="date-chip">
-                <span class="icon-calendar">📅</span>
-                <span>Nov 22</span>
-            </button>
-        </div>
+        <main id="main-content">
+            
+            <section id="tab-taxi" class="tab-screen active">
+                <div class="taxi-panel glass-panel">
+                    <div class="drag-handle"></div>
+                    <h2 class="panel-title">Куда едем?</h2>
+                    
+                    <div class="input-group">
+                        <div class="input-row">
+                            <ion-icon name="navigate-circle" class="icon-start"></ion-icon>
+                            <input type="text" value="Моё местоположение" readonly class="glass-input">
+                        </div>
+                        <div class="connector-line"></div>
+                        <div class="input-row">
+                            <ion-icon name="location" class="icon-end"></ion-icon>
+                            <input type="text" placeholder="Поиск места..." class="glass-input highlight">
+                        </div>
+                    </div>
 
-        <!-- MAIN CARDS -->
-        <main class="content">
-            <!-- Чат с Aria -->
-            <section class="card card-big card-aria">
-                <div class="card-icon-wrap">
-                    <div class="card-icon">✨</div>
-                </div>
-                <div class="card-text">
-                    <div class="card-title">Чат с Aria</div>
-                    <div class="card-sub">Привет, как я могу помочь?</div>
+                    <div class="car-selector">
+                        <div class="car-card glass-card selected" onclick="selectCar(this)">
+                            <div class="car-img">🚗</div>
+                            <div class="car-name">Eco</div>
+                            <div class="car-price">800₸</div>
+                        </div>
+                        <div class="car-card glass-card" onclick="selectCar(this)">
+                            <div class="car-img">🚙</div>
+                            <div class="car-name">Comfort</div>
+                            <div class="car-price">1200₸</div>
+                        </div>
+                        <div class="car-card glass-card" onclick="selectCar(this)">
+                            <div class="car-img">⚡</div>
+                            <div class="car-name">Tesla</div>
+                            <div class="car-price">2500₸</div>
+                        </div>
+                    </div>
+
+                    <button class="main-action-btn glow-btn">
+                        <span>Заказать такси</span>
+                        <ion-icon name="arrow-forward"></ion-icon>
+                    </button>
                 </div>
             </section>
 
-            <!-- ЗАКАЗ -->
-            <section class="card card-slider">
-                <div class="card-icon-wrap">
-                    <div class="card-icon">📦</div>
+            <section id="tab-social" class="tab-screen" style="display:none;">
+                <div class="feed-container">
+                    <div class="glass-card post">
+                        <div class="post-header">
+                            <div class="avatar small">A</div>
+                            <div class="post-info">
+                                <span class="p-name">Aria (AI)</span>
+                                <span class="p-time">2 мин назад</span>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            Пробки на проспекте Бухар-Жырау. Рекомендую объезд через Юго-Восток. Время экономии: 12 минут.
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card post">
+                        <div class="post-header">
+                            <div class="avatar small user">K</div>
+                            <div class="post-info">
+                                <span class="p-name">Кайрат</span>
+                                <span class="p-time">5 мин назад</span>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            Кто потерял ключи у Сити Молла? Оставил на ресепшене.
+                        </div>
+                    </div>
                 </div>
-                <div class="card-text">
-                    <div class="card-title">ЗАКАЗ</div>
-                    <div class="card-sub">Создать запрос</div>
-                </div>
-                <div class="dots">
-                    <span class="dot active"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                </div>
-            </section>
-
-            <!-- Городской чат -->
-            <section class="card card-big card-city">
-                <div class="card-icon-wrap">
-                    <div class="card-icon">💬</div>
-                </div>
-                <div class="card-text">
-                    <div class="card-title">Городской чат</div>
-                    <div class="card-sub">Лента вашего города</div>
-                </div>
-            </section>
-
-            <!-- Small cards row -->
-            <section class="small-cards">
-                <button class="card small-card">
-                    <div class="card-icon small-icon">💬</div>
-                    <div class="small-title">Мессенджер</div>
-                    <div class="small-sub">Диалоги</div>
-                </button>
-                <button class="card small-card">
-                    <div class="card-icon small-icon">👛</div>
-                    <div class="small-title">Кошелек</div>
-                    <div class="small-sub">Баланс</div>
-                </button>
-                <button class="card small-card">
-                    <div class="card-icon small-icon">📰</div>
-                    <div class="small-title">GiD News</div>
-                    <div class="small-sub">Latest updates</div>
-                </button>
             </section>
         </main>
 
-        <!-- BOTTOM NAV -->
-        <nav class="bottom-nav">
-            <button class="nav-item active">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">УСЛУГИ</span>
+        <nav class="glass-dock">
+            <button class="dock-item active" onclick="switchTab('taxi')">
+                <ion-icon name="map"></ion-icon>
             </button>
-            <button class="nav-item">
-                <span class="nav-icon">🧳</span>
-                <span class="nav-label">РАБОТА</span>
+            <button class="dock-item" onclick="switchTab('social')">
+                <ion-icon name="people"></ion-icon>
+            </button>
+            <button class="dock-item ai-trigger" onclick="openAria()">
+                <div class="ai-orb"></div>
+            </button>
+            <button class="dock-item" onclick="switchTab('wallet')">
+                <ion-icon name="wallet"></ion-icon>
+            </button>
+            <button class="dock-item" onclick="switchTab('profile')">
+                <ion-icon name="person"></ion-icon>
             </button>
         </nav>
     </div>
+
+    <input type="file" id="bg-uploader" accept="image/*" style="display: none;">
 
     <script src="script.js"></script>
 </body>
