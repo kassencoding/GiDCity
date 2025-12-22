@@ -133,18 +133,7 @@
 
              <h3 class="section-title" style="padding: 0 20px; margin-top: 20px;">Эфир заказов</h3>
             <div class="orders-list custom-scroll" id="ether-container">
-                <div class="order-strip glass-morphism">
-                    <div class="route-info">
-                        <div class="route-line"><span class="dot a"></span> Моё местоположение</div>
-                        <div class="route-arrow">↓</div>
-                        <div class="route-line"><span class="dot b"></span> Майкудук</div>
-                    </div>
-                    <div class="order-action">
-                        <div class="price-tag">2000₸</div>
-                        <button class="take-btn-big glow-anim">Взять</button>
-                    </div>
                 </div>
-            </div>
         </section>
     </main>
 
@@ -159,14 +148,37 @@
     <div id="modal-overlay" class="modal-overlay hidden">
         
         <div id="modal-searching" class="modal-card center-text">
+            <div class="modal-top-actions">
+                <button class="btn-text-only" onclick="minimizeSearch()">✕ На главный</button>
+            </div>
             <div class="radar-anim">
-                <div class="radar-wave"></div>
-                <div class="radar-wave"></div>
+                <div class="radar-wave"></div><div class="radar-wave"></div>
                 <ion-icon name="car-sport" class="radar-icon"></ion-icon>
             </div>
             <h3>Ищем водителя...</h3>
-            <p style="color: #aaa; margin-top: 10px;">Предлагаем ваш заказ ближайшим машинам</p>
-            <button class="btn-full gray" onclick="cancelOrder()" style="margin-top: 25px;">Отменить</button>
+            <p class="search-notify">Мы сообщим, когда поступят предложения!</p>
+            <button class="btn-full gray" onclick="cancelOrder()" style="margin-top: 25px;">Отменить поиск</button>
+        </div>
+
+        <div id="modal-driver-offer" class="modal-card">
+            <div class="m-head"><h3>Новый заказ</h3><button class="close-m">✕</button></div>
+            <div class="offer-details">
+                <div class="offer-route">Гоголя 34 → Майкудук</div>
+                <div class="offer-price-big">2000 ₸</div>
+            </div>
+            <div class="offer-options">
+                <button class="btn-offer" onclick="alert('Предложено: 2200')">2200</button>
+                <button class="btn-offer" onclick="alert('Предложено: 2500')">2500</button>
+                <button class="btn-offer" onclick="alert('Предложено: 3000')">3000</button>
+            </div>
+            <button class="btn-full glow-anim" onclick="acceptOrder()">Принять за 2000 ₸</button>
+        </div>
+
+        <div id="modal-comments" class="modal-card" style="height: 50vh;">
+            <div class="m-head"><h3>Комментарии</h3><button class="close-m">✕</button></div>
+            <div class="comments-list custom-scroll">
+                <p style="color:#aaa; text-align:center; margin-top:20px;">Пока нет комментариев</p>
+            </div>
         </div>
 
         <div id="modal-profile-edit" class="modal-card">
