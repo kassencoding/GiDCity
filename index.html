@@ -6,9 +6,11 @@
     <title>Aitax SuperApp</title>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -26,6 +28,7 @@
     </header>
 
     <main id="app-viewport">
+        
         <section id="screen-social" class="view">
             <div class="feed-composer">
                 <div class="composer-top">
@@ -42,7 +45,12 @@
             <div class="feed-stream custom-scroll" id="feed-container"></div>
         </section>
 
-        <section id="screen-map" class="view" style="padding:0"><div id="map-container"></div></section>
+        <section id="screen-map" class="view" style="padding:0">
+            <div id="map-container"></div>
+            <div class="map-overlays">
+                 <button class="map-btn-locate" onclick="locateUser()"><ion-icon name="locate"></ion-icon></button>
+             </div>
+        </section>
 
         <section id="screen-home" class="view active">
             <div class="chat-container custom-scroll">
@@ -61,6 +69,31 @@
             </div>
         </section>
 
+        <section id="screen-wallet" class="view">
+            <div class="wallet-card">
+                <span class="w-label">Баланс</span>
+                <div class="w-amount">45 200 ₸</div>
+                <div class="w-actions">
+                    <button onclick="openModal('modal-pay')"><ion-icon name="add-circle"></ion-icon>Пополнить</button>
+                    <button onclick="openModal('modal-out')"><ion-icon name="arrow-down-circle"></ion-icon>Вывести</button>
+                    <button onclick="openModal('modal-send')"><ion-icon name="swap-horizontal"></ion-icon>Перевод</button>
+                </div>
+            </div>
+             <div class="history-list custom-scroll">
+                <h3 class="section-title">История</h3>
+                <div class="card-item">
+                    <div class="icon-box red"><ion-icon name="car-sport"></ion-icon></div>
+                    <div class="card-data"><span>Поездка Aitax</span><small>Сегодня, 14:00</small></div>
+                    <div class="card-sum red">-800 ₸</div>
+                </div>
+                <div class="card-item">
+                    <div class="icon-box green"><ion-icon name="add"></ion-icon></div>
+                    <div class="card-data"><span>Пополнение</span><small>Вчера, 18:20</small></div>
+                    <div class="card-sum green">+5000 ₸</div>
+                </div>
+            </div>
+        </section>
+
         <section id="screen-profile" class="view">
             <div class="driver-block">
                 <div class="driver-avatar-icon"><ion-icon name="person"></ion-icon></div>
@@ -68,8 +101,8 @@
                 <div class="car-details">Toyota Camry 70 • 777 ANB 09</div>
             </div>
             <div class="profile-stats-row">
-                <div class="stat-card glass-morphism"><div class="stat-val">4.98</div><small>Рейтинг</small></div>
-                <div class="stat-card glass-morphism"><div class="stat-val">124</div><small>Поездки</small></div>
+                <div class="stat-card"><div class="stat-val">4.98</div><small>Рейтинг</small></div>
+                <div class="stat-card"><div class="stat-val">124</div><small>Поездки</small></div>
             </div>
             <h3 class="section-title" style="padding:0 20px">Эфир заказов</h3>
             <div class="orders-list custom-scroll" id="ether-container"></div>
@@ -108,7 +141,7 @@
             <h3>Водитель предлагает</h3>
             <div class="offer-price-display" id="driver-offer-val" style="color:var(--accent)">0 ₸</div>
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn-full gray" onclick="document.getElementById('modal-passenger-decision').classList.remove('active')">Отказ</button>
+                <button class="btn-full gray" onclick="closeModal()">Отказ</button>
                 <button class="btn-full" onclick="passengerAcceptOffer()">Принять!</button>
             </div>
         </div>
@@ -129,7 +162,7 @@
                 <div class="city-item" onclick="selectCity('Shymkent','+12°C')">Shymkent</div>
                 <div class="city-item" onclick="selectCity('Aktobe','-5°C')">Aktobe</div>
                 <div class="city-item" onclick="selectCity('Atyrau','-2°C')">Atyrau</div>
-            </div>
+                </div>
         </div>
 
         <div id="modal-theme" class="modal-card">
@@ -139,8 +172,16 @@
                 <button class="theme-btn" style="background:#FFD700" onclick="setTheme('#FFD700','dark')"></button>
                 <button class="theme-btn" style="background:#ff2d55" onclick="setTheme('#ff2d55','light')"></button>
                 <button class="theme-btn" style="background:#30d158" onclick="setTheme('#30d158','dark')"></button>
+                <button class="theme-btn" style="background:#ff9f0a" onclick="setTheme('#ff9f0a','dark')"></button>
+                <button class="theme-btn" style="background:#bf5af2" onclick="setTheme('#bf5af2','light')"></button>
                 <button class="theme-btn" style="background:#fff" onclick="setTheme('#ffffff','dark')"></button>
+                <button class="theme-btn" style="background:#333; border:1px solid #555" onclick="setTheme('#333333','light')"></button>
             </div>
+        </div>
+        
+        <div id="modal-comments" class="modal-card full-height">
+             <div class="m-head"><h3>Комментарии</h3><button class="close-m" onclick="closeModal()"><ion-icon name="close"></ion-icon></button></div>
+             <div class="comments-list"><p style="color:#777;text-align:center;">Пока нет комментариев</p></div>
         </div>
 
     </div>
