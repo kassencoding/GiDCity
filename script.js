@@ -4,64 +4,31 @@ if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#000000'); tg.enableClosin
 let map, userMarker;
 let selectedImage = null;
 
-// === УПРАВЛЕНИЕ ВКЛАДКАМИ ===
 function goTab(id, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById('screen-' + id).classList.add('active');
-    
     document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
-
     const aiBtn = document.getElementById('ai-main-btn');
     if(id === 'home') aiBtn.classList.add('active-mode'); else aiBtn.classList.remove('active-mode');
-
-    // ФИКС КАРТЫ
-    if (id === 'map') {
-        if (!map) initMap();
-        setTimeout(() => map.invalidateSize(), 200); 
-    }
+    if (id === 'map') { if (!map) initMap(); setTimeout(() => map.invalidateSize(), 200); }
     if(tg) tg.HapticFeedback.selectionChanged();
 }
 
-// === ЛОГИКА КНОПКИ AI ===
 const aiBtn = document.getElementById('ai-main-btn');
-let pressTimer;
-let isLongPress = false;
-
-aiBtn.addEventListener('touchstart', (e) => {
-    isLongPress = false;
-    aiBtn.style.transform = "scale(0.9)";
-    pressTimer = setTimeout(() => {
-        isLongPress = true;
-        if(tg) tg.HapticFeedback.impactOccurred('heavy');
-        aiBtn.classList.add('listening'); 
-    }, 600);
+aiBtn.addEventListener('click', () => {
+    goTab('home', null);
+    if(tg) tg.HapticFeedback.impactOccurred('light');
 });
 
-aiBtn.addEventListener('touchend', (e) => {
-    clearTimeout(pressTimer);
-    aiBtn.style.transform = ""; 
-    aiBtn.classList.remove('listening');
-
-    if (isLongPress) {
-        // Тут была бы логика голоса
-    } else {
-        // ВСЕГДА ВОЗВРАЩАЕТ НА ГЛАВНУЮ
-        goTab('home', null);
-    }
-});
-
-// === ЗАКАЗ ===
+// === ЗАКАЗ И ТОРГ ===
 function createOrder() {
     const dest = document.getElementById('inp-dest').value;
     const price = document.getElementById('inp-price').value;
-    if(!dest || !price) {
-        if(tg) tg.showAlert('Заполните адрес и цену');
-        return;
-    }
+    if(!dest || !price) { if(tg) tg.showAlert('Заполните адрес и цену'); return; }
+    
     openModal('modal-searching');
     
-    // Создаем заказ для водителя
     const etherContainer = document.getElementById('ether-container');
     const newOrderHtml = `
         <div class="order-strip glass-morphism">
@@ -79,40 +46,34 @@ function createOrder() {
     etherContainer.insertAdjacentHTML('afterbegin', newOrderHtml);
 }
 
-function minimizeSearch() {
-    document.getElementById('modal-overlay').classList.add('hidden');
-    // Показываем мини-статус или просто выходим
-}
+function minimizeSearch() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function cancelOrder() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
-function cancelOrder() {
-    document.getElementById('modal-overlay').classList.add('hidden');
-    if(tg) tg.HapticFeedback.impactOccurred('light');
-}
-
-// === ВОДИТЕЛЬ: ТОРГ ===
+// 1. Водитель открывает торг
 function openOfferModal(price) {
     document.querySelector('#modal-driver-offer .offer-price-big').innerText = price + ' ₸';
     openModal('modal-driver-offer');
 }
+// 2. Водитель отправляет свою цену
+function sendCounterOffer() {
+    const bid = document.getElementById('driver-bid-input').value;
+    if(!bid) return;
+    document.getElementById('modal-overlay').classList.add('hidden');
+    
+    // Симуляция: Пассажир получает предложение
+    setTimeout(() => {
+        document.getElementById('driver-offer-val').innerText = bid + ' ₸';
+        openModal('modal-passenger-decision');
+        if(tg) tg.HapticFeedback.notificationOccurred('warning');
+    }, 1500);
+}
+// 3. Водитель принимает заказ сразу
 function acceptOrder() {
     document.getElementById('modal-overlay').classList.add('hidden');
     if(tg) tg.showAlert('Вы приняли заказ!');
 }
 
-// === ЛЕНТА: КНОПКИ ===
-function sharePost(btn) {
-    if(navigator.share) navigator.share({title: 'Aitax', text: 'Пост из Aitax', url: window.location.href});
-}
-function openComments() {
-    openModal('modal-comments');
-}
-function toggleLike(btn) {
-    btn.classList.toggle('liked');
-    const icon = btn.querySelector('ion-icon');
-    icon.setAttribute('name', btn.classList.contains('liked') ? 'heart' : 'heart-outline');
-    if(tg) tg.HapticFeedback.selectionChanged();
-}
-// (Публикация поста осталась прежней, сокращаю для лимита)
+// === ЛЕНТА ===
 const fileInput = document.getElementById('file-input');
 const imagePreview = document.getElementById('image-preview');
 const previewCont = document.getElementById('image-preview-container');
@@ -125,6 +86,7 @@ fileInput.addEventListener('change', function() {
     }
 });
 document.getElementById('remove-image-btn').addEventListener('click', () => { selectedImage = null; fileInput.value = ''; previewCont.classList.remove('visible'); });
+
 function publishPost() {
     const text = document.getElementById('post-text-input').value;
     if(!text && !selectedImage) return;
@@ -133,12 +95,12 @@ function publishPost() {
     post.className = 'post-card glass-morphism';
     post.innerHTML = `
         <button class="delete-post-btn" onclick="this.closest('.post-card').remove()">✕</button>
-        <div class="post-head"><div class="avatar-mini" style="background:var(--accent)">E</div><span class="name">Елназар</span><span class="time">Только что</span></div>
+        <div class="post-head"><div class="avatar-circle" style="width:28px;height:28px;font-size:14px;"><ion-icon name="person"></ion-icon></div><span class="name">Елназар</span><span class="time">Только что</span></div>
         ${text ? `<div class="text">${text}</div>` : ''}
         ${selectedImage ? `<img src="${selectedImage}" class="post-image" style="width:100%;border-radius:10px;margin-bottom:10px;">` : ''}
         <div class="post-actions">
-            <button class="act-btn" onclick="toggleLike(this)"><ion-icon name="heart-outline"></ion-icon></button>
-            <button class="act-btn" onclick="openComments()"><ion-icon name="chatbubble-outline"></ion-icon></button>
+            <button class="act-btn" onclick="toggleLike(this)"><ion-icon name="heart-outline"></ion-icon> <span>0</span></button>
+            <button class="act-btn" onclick="openComments()"><ion-icon name="chatbubble-outline"></ion-icon> <span>0</span></button>
             <button class="act-btn" onclick="sharePost()"><ion-icon name="share-social-outline"></ion-icon></button>
         </div>
     `;
@@ -147,6 +109,18 @@ function publishPost() {
     document.getElementById('remove-image-btn').click();
     if(tg) tg.HapticFeedback.notificationOccurred('success');
 }
+function toggleLike(btn) {
+    btn.classList.toggle('liked');
+    const icon = btn.querySelector('ion-icon');
+    const span = btn.querySelector('span');
+    let count = parseInt(span.innerText);
+    if(btn.classList.contains('liked')) { icon.setAttribute('name', 'heart'); count++; } 
+    else { icon.setAttribute('name', 'heart-outline'); count--; }
+    span.innerText = count;
+    if(tg) tg.HapticFeedback.selectionChanged();
+}
+function openComments() { openModal('modal-comments'); }
+function sharePost() { if(navigator.share) navigator.share({title: 'Aitax', text: 'Пост из Aitax', url: window.location.href}); }
 
 // === КАРТА ===
 function initMap() {
@@ -163,14 +137,18 @@ function locateUser() {
     });
 }
 
-// === ОБЩЕЕ ===
+// === НАСТРОЙКИ ===
 function selectCity(name, weather) {
     document.getElementById('current-city').innerText = name;
     document.getElementById('current-weather').innerText = weather;
     document.getElementById('modal-overlay').classList.add('hidden');
 }
-function setTheme(color) {
+function setTheme(color, mode) {
     document.documentElement.style.setProperty('--accent', color);
+    // Контраст текста
+    if(mode === 'light') document.documentElement.style.setProperty('--accent-text', '#fff');
+    else document.documentElement.style.setProperty('--accent-text', '#000');
+    
     document.getElementById('modal-overlay').classList.add('hidden');
 }
 function openModal(id) {
