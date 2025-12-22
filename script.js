@@ -230,3 +230,4 @@ document.addEventListener('click', (e) => {
 });
 function openSidebar() { document.getElementById('sidebar-settings').classList.add('open'); }
 function closeSidebar() { document.getElementById('sidebar-settings').classList.remove('open'); }
+
