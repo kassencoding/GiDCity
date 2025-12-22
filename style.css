@@ -37,7 +37,6 @@ body { background: var(--bg-dark); color: #fff; font-family: 'SF Pro Display', -
 .composer-bot { display: flex; justify-content: space-between; }
 .btn-att { background: none; border: none; color: var(--accent); font-size: 24px; padding: 5px; }
 .btn-post { background: var(--accent); color: var(--accent-text); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 14px; }
-
 .feed-stream { padding: 0 16px 20px; }
 .post-card { background: var(--glass); border: 1px solid var(--border); width: 100%; border-radius: 20px; padding: 15px; margin-bottom: 15px; position: relative; }
 .delete-post-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #555; font-size: 16px; }
@@ -87,6 +86,13 @@ body { background: var(--bg-dark); color: #fff; font-family: 'SF Pro Display', -
 .stat-card { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 5px; padding: 20px; background: var(--glass); border-radius: 20px; border: 1px solid var(--border); }
 .stat-val { font-size: 24px; font-weight: 700; }
 
+.card-item { display: flex; align-items: center; gap: 15px; padding: 18px; border-radius: 20px; margin-bottom: 12px; width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+.icon-box { width: 42px; height: 42px; background: rgba(255,255,255,0.1); border-radius: 14px; display: grid; place-items: center; font-size: 20px; }
+.icon-box.red { color: #ff3b30; background: rgba(255, 59, 48, 0.15); }
+.icon-box.green { color: var(--success-green); background: rgba(48, 209, 88, 0.15); }
+.card-data { flex: 1; } .card-data small { display: block; color: var(--text-muted); margin-top: 4px; }
+.card-sum { font-weight: 700; font-size: 16px; } .card-sum.red { color: #ff3b30; } .card-sum.green { color: var(--success-green); }
+
 .driver-block { margin: 0 20px 25px; padding: 30px 20px; border-radius: 24px; display: flex; flex-direction: column; align-items: center; text-align: center; background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
 .driver-avatar-icon { width: 80px; height: 80px; border-radius: 50%; display: grid; place-items: center; font-size: 40px; color: #ccc; margin-bottom: 15px; border: 2px solid var(--accent); background: rgba(255,255,255,0.05); }
 .driver-name { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
@@ -133,7 +139,7 @@ body { background: var(--bg-dark); color: #fff; font-family: 'SF Pro Display', -
 }
 .close-m:active { background: rgba(255,255,255,0.2); }
 
-/* Поля ввода (Apple Style) */
+/* Поля ввода */
 .input-group-modal { margin-bottom: 18px; } 
 .input-group-modal label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; margin-left: 5px; }
 .modal-inp { 
