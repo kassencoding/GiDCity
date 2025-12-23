@@ -5,7 +5,7 @@ let isGuest = true;
 let currentProfile = { name: "Алибек", phone: "+7 777 123 45 67", avatar: "" };
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Показать авторизацию при старте
+    // По умолчанию показываем экран авторизации
     document.getElementById('auth-screen').style.display = 'flex';
 });
 
@@ -18,7 +18,6 @@ function checkPhoneInput() {
     // Если введено достаточно цифр, показываем поле кода
     if (phoneInp.value.length > 8) {
         document.getElementById('sms-block').style.display = 'block';
-        // Автофокус на код (имитация UX)
         if(!document.getElementById('auth-code').value) {
             document.getElementById('auth-code').focus();
         }
@@ -51,7 +50,6 @@ function updateProfileUI() {
     // Обновляем сайдбар
     document.getElementById('profile-name').innerText = currentProfile.name;
     document.getElementById('profile-phone').innerText = document.getElementById('auth-phone').value;
-    
     // Обновляем кабинет водителя
     document.getElementById('driver-name-display').innerText = currentProfile.name;
     if(currentProfile.avatar) {
@@ -74,7 +72,7 @@ document.getElementById('avatar-input').addEventListener('change', function(e) {
     }
 });
 
-// === НАВИГАЦИЯ И ПАНЕЛЬ ЗАКАЗА ===
+// === НАВИГАЦИЯ ===
 function switchTab(tabId) {
     if (isGuest && tabId !== 'feed') {
         document.getElementById('auth-screen').style.display = 'flex';
@@ -94,13 +92,13 @@ function switchTab(tabId) {
     
     if(tabId === 'city') {
         document.getElementById('city-view').classList.add('active');
-        // Переключаем на карту, если была открыта, или на афишу
+        // Переключаем на карту или афишу
         setTimeout(() => { if(cityMap) cityMap.invalidateSize(); }, 200);
     } else if (tabId !== 'home') {
         document.getElementById(tabId + '-view').classList.add('active');
     }
     
-    // Подсветка кнопок
+    // Подсветка кнопок докбара
     if(tabId === 'city') document.querySelectorAll('.dock-item')[0].classList.add('active');
     if(tabId === 'feed') document.querySelectorAll('.dock-item')[1].classList.add('active');
     if(tabId === 'wallet') document.querySelectorAll('.dock-item')[2].classList.add('active');
@@ -116,11 +114,11 @@ function togglePanel() {
     panel.classList.toggle('minimized');
     
     if (panel.classList.contains('minimized')) {
-        restoreBtn.style.display = 'grid'; // Показать кнопку развертывания
-        overlays.style.bottom = "120px"; // Опустить кнопки карты
+        restoreBtn.style.display = 'grid'; // Показать кнопку
+        overlays.style.bottom = "120px"; // Опустить кнопки
     } else {
         restoreBtn.style.display = 'none';
-        overlays.style.bottom = "380px"; // Поднять кнопки карты
+        overlays.style.bottom = "380px"; // Поднять кнопки
     }
 }
 
@@ -139,7 +137,6 @@ function initMap() {
             maxZoom: 19
         }).addTo(map);
     }
-    // Карта города (тоже темная по ТЗ)
     if(!cityMap) {
         cityMap = L.map('city-map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -186,7 +183,7 @@ function publishPost() {
         </div>
         <div class="post-content">${text}</div>
         <div class="post-actions-bar">
-            <button class="act-btn" onclick="toggleLike(this)"><ion-icon name="heart-outline"></ion-icon> 0</button>
+            <button class="act-btn" onclick="toggleLike(this)"><ion-icon name="heart-outline"></ion-icon> <span>0</span></button>
             <button class="act-btn" onclick="openCommentModal('${newId}')"><ion-icon name="chatbubble-outline"></ion-icon></button>
         </div>
     </div>`;
@@ -206,15 +203,20 @@ function deletePost(id) {
 function toggleLike(btn) {
     btn.classList.toggle('liked');
     const icon = btn.querySelector('ion-icon');
+    const countSpan = btn.querySelector('span');
+    let count = parseInt(countSpan.innerText);
+    
     if(btn.classList.contains('liked')) {
         icon.setAttribute('name', 'heart');
+        count++;
     } else {
         icon.setAttribute('name', 'heart-outline');
+        count--;
     }
+    countSpan.innerText = count;
 }
 
 function openCommentModal(id) {
-    // Открываем модалку для конкретного поста
     openModal('comment-thread-modal');
 }
 
@@ -232,12 +234,15 @@ function sendMessage() {
 function addMessageBubble(text, sender) {
     const container = document.querySelector('.chat-container');
     const div = document.createElement('div');
-    div.className = 'ai-msg';
+    div.className = 'ai-msg'; // Проверь в CSS есть ли этот класс (добавим если нет)
+    div.style.display = 'flex';
+    div.style.marginBottom = '10px';
+    
     if(sender === 'user') {
         div.style.justifyContent = 'flex-end';
-        div.innerHTML = `<div class="msg-bubble" style="background:var(--accent); color:white;">${text}</div>`;
+        div.innerHTML = `<div style="background:var(--accent); color:white; padding:10px 15px; border-radius:15px 15px 0 15px;">${text}</div>`;
     } else {
-        div.innerHTML = `<div class="ai-avatar">Ai</div><div class="msg-bubble">${text}</div>`;
+        div.innerHTML = `<div style="background:rgba(255,255,255,0.1); padding:10px 15px; border-radius:15px 15px 15px 0;">${text}</div>`;
     }
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
@@ -257,10 +262,7 @@ function offerMyPrice() {
 }
 
 function sendDriverOffer() {
-    // Водитель нажал "Отправить"
     closeModal('order-negotiation-modal');
-    
-    // Имитация: через 1 сек у клиента всплывает окно
     setTimeout(() => {
         const price = document.querySelector('.offer-price-display').innerText;
         document.getElementById('client-offer-price').innerText = price;
@@ -277,7 +279,6 @@ function clientAccept() {
 function toggleSidebar() {
     const sb = document.getElementById('sidebar');
     sb.classList.toggle('open');
-    // Сброс к главному меню при закрытии
     if(!sb.classList.contains('open')) {
         setTimeout(() => closeSubMenu(), 300);
     }
@@ -293,23 +294,7 @@ function closeSubMenu() {
     document.getElementById('sidebar-main').style.display = 'block';
 }
 
-function setLang(l) {
-    document.querySelectorAll('.setting-list-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-}
-
-function setTheme(id) {
-    // Логика смены темы
-    alert("Тема применена!");
-}
-
 // === UTIL ===
-function openModal(id) {
-    document.getElementById(id).classList.remove('hidden');
-}
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-}
-function openWalletModal(type) {
-    openModal('wallet-action-modal');
-}
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function openWalletModal(type) { openModal('wallet-action-modal'); }
