@@ -29,7 +29,7 @@
                 </div>
             </div>
             <button class="btn-full" onclick="tryLogin()" id="btn-login-action">Войти</button>
-            <div class="guest-link" onclick="continueAsGuest()">Продолжить как гость</div>
+            <div class="guest-link" onclick="continueAsGuest()">Продолжить как гость (Только лента)</div>
         </div>
     </div>
 
@@ -68,20 +68,20 @@
             
             <div class="settings-grid">
                 <div class="setting-card" onclick="openSubMenu('language')">
-                    <ion-icon name="language" style="color:#a29bfe"></ion-icon>
+                    <div class="s-icon-box" style="background: rgba(162, 155, 254, 0.2); color: #a29bfe;"><ion-icon name="language"></ion-icon></div>
                     <span>Язык</span>
                 </div>
                 <div class="setting-card" onclick="openSubMenu('theme')">
-                    <ion-icon name="color-palette" style="color:#fd79a8"></ion-icon>
+                    <div class="s-icon-box" style="background: rgba(253, 121, 168, 0.2); color: #fd79a8;"><ion-icon name="color-palette"></ion-icon></div>
                     <span>Тема</span>
                 </div>
-                <div class="setting-card" onclick="alert('История заказов')">
-                    <ion-icon name="time" style="color:#00cec9"></ion-icon>
+                <div class="setting-card" onclick="alert('История заказов пуста')">
+                    <div class="s-icon-box" style="background: rgba(0, 206, 201, 0.2); color: #00cec9;"><ion-icon name="time"></ion-icon></div>
                     <span>История</span>
                 </div>
-                <div class="setting-card" onclick="alert('Реклама добавлена!')">
-                    <ion-icon name="megaphone" style="color:#ff7675"></ion-icon>
-                    <span>Добавить рекламу</span>
+                <div class="setting-card" onclick="alert('Форма добавления рекламы')">
+                    <div class="s-icon-box" style="background: rgba(255, 118, 117, 0.2); color: #ff7675;"><ion-icon name="megaphone"></ion-icon></div>
+                    <span>Реклама</span>
                 </div>
             </div>
         </div>
@@ -126,7 +126,7 @@
                         <p>Билеты от 5000 ₸. Скидки студентам!</p>
                     </div>
                 </div>
-            </div>
+                </div>
         </div>
 
         <div id="tab-citymap" class="city-content">
@@ -176,6 +176,17 @@
                         <div class="lbl">Куда</div>
                         <input type="text" class="clean-addr-inp" placeholder="Укажите точку Б">
                     </div>
+                </div>
+            </div>
+            
+            <div class="options-row">
+                <div class="opt-box" onclick="openModal('comment-modal')">
+                    <div class="lbl">Комментарий</div>
+                    <div>Указать...</div>
+                </div>
+                <div class="opt-box">
+                    <div class="lbl">Время</div>
+                    <div>Сейчас</div>
                 </div>
             </div>
 
@@ -256,6 +267,9 @@
                     <span>QR</span>
                 </button>
             </div>
+             <div class="bonus-note">
+                ⚡️ Пополняйте счет и катайтесь со скидкой! Оплата через QR выгоднее.
+            </div>
         </div>
 
         <div class="section-title">История</div>
@@ -289,6 +303,19 @@
                     <button class="take-btn-big" onclick="openOrderNegotiation(1)">Взять</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="comment-modal">
+        <div class="modal-card">
+            <div class="m-head">
+                <h3>Комментарий</h3>
+                <button class="close-m" onclick="closeModal('comment-modal')"><ion-icon name="close"></ion-icon></button>
+            </div>
+            <div class="input-group-modal">
+                <input type="text" class="modal-inp glass-inp" placeholder="Например: с ребенком...">
+            </div>
+            <button class="btn-full" onclick="closeModal('comment-modal')">Сохранить</button>
         </div>
     </div>
 
@@ -367,7 +394,7 @@
             </div>
             <div id="wallet-inputs">
                 <input type="number" class="modal-inp glass-inp" placeholder="Сумма (₸)" style="margin-bottom:15px;">
-                <button class="btn-full glass-btn-style">Выполнить</button>
+                <button class="btn-full">Выполнить</button>
             </div>
         </div>
     </div>
