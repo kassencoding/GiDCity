@@ -15,17 +15,16 @@
     <div id="background-layer"></div>
     <div class="cyber-grid"></div>
 
-    <div id="auth-screen" class="auth-overlay" style="display:none;">
+    <div id="auth-screen" class="auth-overlay">
         <div class="auth-card">
             <h1>Aitax ID</h1>
-            <p>Единый вход в экосистему</p>
+            <p>Войдите, чтобы пользоваться всеми функциями</p>
             <div class="input-group-auth">
                 <input type="text" placeholder="Ваше Имя" id="auth-name" class="glass-inp">
                 <input type="tel" value="+7 " id="auth-phone" class="glass-inp" oninput="checkPhoneInput()">
-                
                 <div class="sms-group" style="display:none; margin-top:10px;" id="sms-block">
                     <input type="number" placeholder="Код из СМС" id="auth-code" class="glass-inp" value="1234">
-                    <div style="font-size:11px; color:gray; margin-top:5px;">Код для теста: 1234</div>
+                    <small style="color:gray; display:block; margin-top:5px;">Код: 1234</small>
                 </div>
             </div>
             <button class="btn-full" onclick="tryLogin()" id="btn-login-action">Войти</button>
@@ -38,7 +37,6 @@
             <span>Karaganda</span> • <span>-2°C ❄️</span>
             <ion-icon name="chevron-down-outline"></ion-icon>
         </div>
-
         <div class="brand-row">
             <div class="logo">Aitax</div>
             <div class="btn-icon" onclick="toggleSidebar()"><ion-icon name="grid-outline"></ion-icon></div>
@@ -58,30 +56,30 @@
                     <label for="avatar-input" class="edit-icon"><ion-icon name="camera"></ion-icon></label>
                     <input type="file" id="avatar-input" hidden accept="image/*">
                 </div>
-                <div class="p-info">
+                <div class="profile-info">
                     <div class="p-name" id="profile-name">Гость</div>
                     <div class="p-phone" id="profile-phone">+7 ...</div>
                 </div>
             </div>
 
             <div class="divider"></div>
-            
+
             <div class="settings-grid">
                 <div class="setting-card" onclick="openSubMenu('language')">
-                    <div class="s-icon-box" style="background: rgba(162, 155, 254, 0.2); color: #a29bfe;"><ion-icon name="language"></ion-icon></div>
+                    <div class="s-icon-box" style="color:#a29bfe; background:rgba(162,155,254,0.15);"><ion-icon name="language"></ion-icon></div>
                     <span>Язык</span>
                 </div>
                 <div class="setting-card" onclick="openSubMenu('theme')">
-                    <div class="s-icon-box" style="background: rgba(253, 121, 168, 0.2); color: #fd79a8;"><ion-icon name="color-palette"></ion-icon></div>
+                    <div class="s-icon-box" style="color:#fd79a8; background:rgba(253,121,168,0.15);"><ion-icon name="color-palette"></ion-icon></div>
                     <span>Тема</span>
                 </div>
-                <div class="setting-card" onclick="alert('История заказов пуста')">
-                    <div class="s-icon-box" style="background: rgba(0, 206, 201, 0.2); color: #00cec9;"><ion-icon name="time"></ion-icon></div>
-                    <span>История</span>
-                </div>
-                <div class="setting-card" onclick="alert('Форма добавления рекламы')">
-                    <div class="s-icon-box" style="background: rgba(255, 118, 117, 0.2); color: #ff7675;"><ion-icon name="megaphone"></ion-icon></div>
+                <div class="setting-card" onclick="alert('Добавить рекламу')">
+                    <div class="s-icon-box" style="color:#ff7675; background:rgba(255,118,117,0.15);"><ion-icon name="megaphone"></ion-icon></div>
                     <span>Реклама</span>
+                </div>
+                 <div class="setting-card" onclick="alert('История заказов')">
+                    <div class="s-icon-box" style="color:#00cec9; background:rgba(0,206,201,0.15);"><ion-icon name="time"></ion-icon></div>
+                    <span>История</span>
                 </div>
             </div>
         </div>
@@ -91,9 +89,9 @@
                 <button class="back-btn" onclick="closeSubMenu()"><ion-icon name="arrow-back"></ion-icon></button>
                 <h3>Язык</h3>
             </div>
-            <button class="setting-list-btn active" onclick="setLang('ru')">Русский 🇷🇺</button>
-            <button class="setting-list-btn" onclick="setLang('kz')">Қазақша 🇰🇿</button>
-            <button class="setting-list-btn" onclick="setLang('en')">English 🇺🇸</button>
+            <button class="setting-list-btn active">Русский 🇷🇺</button>
+            <button class="setting-list-btn">Қазақша 🇰🇿</button>
+            <button class="setting-list-btn">English 🇺🇸</button>
         </div>
 
         <div id="sidebar-theme" class="sidebar-sub" style="display:none;">
@@ -102,10 +100,10 @@
                 <h3>Оформление</h3>
             </div>
             <div class="theme-grid">
-                <div class="theme-circle" style="background: linear-gradient(135deg, #0f0c29, #302b63);" onclick="setTheme(1)"></div>
-                <div class="theme-circle" style="background: linear-gradient(135deg, #16222A, #3A6073);" onclick="setTheme(2)"></div>
-                <div class="theme-circle" style="background: linear-gradient(135deg, #191919, #620808);" onclick="setTheme(3)"></div>
-                <div class="theme-circle" style="background: linear-gradient(135deg, #000000, #434343);" onclick="setTheme(4)"></div>
+                <div class="theme-circle" style="background: linear-gradient(135deg, #0f0c29, #302b63);"></div>
+                <div class="theme-circle" style="background: linear-gradient(135deg, #16222A, #3A6073);"></div>
+                <div class="theme-circle" style="background: linear-gradient(135deg, #191919, #620808);"></div>
+                <div class="theme-circle" style="background: linear-gradient(135deg, #000000, #434343);"></div>
             </div>
         </div>
     </div>
@@ -119,19 +117,19 @@
         <div id="tab-billboard" class="city-content active">
             <div class="ad-feed">
                 <div class="ad-card premium">
-                    <div class="ad-badge">HOT</div>
-                    <img src="https://placehold.co/600x350/222/FFF?text=Concert+Show" class="ad-img">
+                    <div class="ad-badge">Promoted</div>
+                    <img src="https://placehold.co/600x300/1a1a1a/FFF?text=Concert+Show" class="ad-img">
                     <div class="ad-info">
-                        <h3>Концерт в Караганде</h3>
-                        <p>Билеты от 5000 ₸. Скидки студентам!</p>
+                        <h3>Грандиозный концерт</h3>
+                        <p>Скидки 50% на билеты только сегодня!</p>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div id="tab-citymap" class="city-content">
             <div id="city-map-container"></div>
-            <div class="map-overlays" style="bottom: 100px;">
+             <div class="map-overlays" style="bottom: 100px;">
                 <div class="map-btn-locate" onclick="centerCityMap()"><ion-icon name="locate"></ion-icon></div>
             </div>
         </div>
@@ -154,7 +152,7 @@
 
             <div class="chat-input-row">
                 <div class="input-wrapper improved">
-                    <input type="text" placeholder="AI такси (Куда едем?)" id="chatInput">
+                    <input type="text" placeholder="AI чат (Куда едем?)" id="chatInput">
                     <button class="btn-send-inside" onclick="sendMessage()">
                         <ion-icon name="arrow-up"></ion-icon>
                     </button>
@@ -178,7 +176,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="options-row">
                 <div class="opt-box" onclick="openModal('comment-modal')">
                     <div class="lbl">Комментарий</div>
@@ -221,7 +219,7 @@
         <div class="feed-stream" id="feed-container">
             <div class="post-card" id="post-1">
                 <div class="post-head">
-                    <div class="avatar-circle" style="width:36px; height:36px;">A</div>
+                    <div class="avatar-circle">A</div>
                     <div style="flex:1; margin-left:10px;">
                         <div class="name-row">
                             <span class="name">Admin</span>
@@ -231,17 +229,10 @@
                     </div>
                     <button class="trash-btn" onclick="deletePost('post-1')"><ion-icon name="trash-outline"></ion-icon></button>
                 </div>
-                
-                <div class="post-content">
-                    Добро пожаловать в обновленный Aitax! 🚀
-                </div>
-                
+                <div class="post-content">Добро пожаловать в Aitax! 🚀</div>
                 <div class="post-actions-bar">
-                    <button class="act-btn" onclick="toggleLike(this)">
-                        <ion-icon name="heart-outline"></ion-icon> <span style="font-size:13px; margin-left:5px;">12</span>
-                    </button>
+                    <button class="act-btn" onclick="toggleLike(this)"><ion-icon name="heart-outline"></ion-icon> <span>12</span></button>
                     <button class="act-btn" onclick="openCommentModal('post-1')"><ion-icon name="chatbubble-outline"></ion-icon></button>
-                    <button class="act-btn"><ion-icon name="repeat-outline"></ion-icon></button>
                     <button class="act-btn"><ion-icon name="paper-plane-outline"></ion-icon></button>
                 </div>
             </div>
@@ -267,12 +258,10 @@
                     <span>QR</span>
                 </button>
             </div>
-             <div class="bonus-note">
-                ⚡️ Пополняйте счет и катайтесь со скидкой! Оплата через QR выгоднее.
-            </div>
+             <div class="bonus-note">⚡️ Пополняйте счет и катайтесь со скидкой!</div>
         </div>
 
-        <div class="section-title">История</div>
+        <div class="section-title">История транзакций</div>
         <div class="history-list">
              <div class="card-item">
                 <div class="icon-box red"><ion-icon name="car"></ion-icon></div>
@@ -291,12 +280,12 @@
             <div class="driver-name" id="driver-name-display">Имя Фамилия</div>
             <div class="car-details">Toyota Camry • 777 AAA 01</div>
         </div>
-        <div class="section-title">Заказы рядом</div>
+        <div class="section-title">Эфир заказов</div>
         <div class="orders-list">
             <div class="order-strip">
                 <div class="route-info">
-                    <div style="font-weight:700;">Абая 15 → Вокзал</div>
-                    <div style="font-size:12px; color:gray; margin-top:4px;">Эконом • 3.2 км</div>
+                    <div style="font-weight:700;">Центр → Юго-Восток</div>
+                    <div style="font-size:12px; color:gray; margin-top:4px;">Эконом • 5.2 км</div>
                 </div>
                 <div style="text-align:right;">
                     <div class="price-tag">2000 ₸</div>
@@ -325,7 +314,7 @@
                 <h3>Новый пост</h3>
                 <button class="close-m" onclick="closeModal('create-post-modal')"><ion-icon name="close"></ion-icon></button>
             </div>
-            <textarea class="modal-textarea glass-inp" id="new-post-text" placeholder="О чем расскажете?"></textarea>
+            <textarea class="modal-textarea glass-inp" id="new-post-text" placeholder="Текст поста..."></textarea>
             <div style="margin: 10px 0;">
                 <button class="btn-icon-small"><ion-icon name="image-outline"></ion-icon> Фото</button>
             </div>
@@ -342,11 +331,7 @@
                 <h3>Комментарий</h3>
                 <button class="close-m" onclick="closeModal('comment-thread-modal')"><ion-icon name="close"></ion-icon></button>
             </div>
-            <div class="quoted-post">
-                <small>Ответ на пост:</small>
-                <div style="font-style:italic; opacity:0.7;">"Добро пожаловать..."</div>
-            </div>
-            <input type="text" class="modal-inp glass-inp" placeholder="Ваш комментарий..." style="margin-top:10px;">
+            <input type="text" class="modal-inp glass-inp" placeholder="Ваш ответ...">
             <button class="btn-full" onclick="closeModal('comment-thread-modal')">Отправить</button>
         </div>
     </div>
@@ -367,17 +352,11 @@
 
     <div class="modal-overlay hidden" id="client-decision-modal">
         <div class="modal-card">
-            <div class="m-head">
-                <h3>Водитель предлагает</h3>
-            </div>
-            <div class="driver-info-mini">
-                <div class="avatar-circle">D</div>
-                <div>Алибек • 4.9⭐</div>
-            </div>
+            <div class="m-head"><h3>Водитель предлагает</h3></div>
             <div class="offer-price-display" id="client-offer-price">2000 ₸</div>
             <div class="offer-actions">
-                <button class="btn-outline" onclick="closeModal('client-decision-modal')" style="color:red; border-color:red;">Отказать</button>
-                <button class="btn-full" onclick="clientAccept()" style="background:var(--success-green);">Принять</button>
+                <button class="btn-outline" style="border-color:red; color:red;" onclick="closeModal('client-decision-modal')">Отказать</button>
+                <button class="btn-full" style="background:var(--success-green);" onclick="clientAccept()">Принять</button>
             </div>
         </div>
     </div>
