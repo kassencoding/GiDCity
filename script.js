@@ -1,300 +1,228 @@
-// === INIT ===
+// === ИНИЦИАЛИЗАЦИЯ ===
+const tg = window.Telegram?.WebApp;
+if(tg) { tg.ready(); tg.expand(); }
+
+// Переменные карт
 let map, cityMap;
-let userMarker;
-let isGuest = true;
-let currentProfile = { name: "Алибек", phone: "+7 777 123 45 67", avatar: "" };
+let isPanelCollapsed = false;
 
 document.addEventListener("DOMContentLoaded", () => {
-    // По умолчанию показываем экран авторизации
+    // 1. Показываем Авторизацию
     document.getElementById('auth-screen').style.display = 'flex';
+    
+    // 2. Инициализируем обработчики для панели
+    initPanelLogic();
 });
 
-// === АВТОРИЗАЦИЯ ===
-function checkPhoneInput() {
-    const phoneInp = document.getElementById('auth-phone');
-    if (!phoneInp.value.startsWith('+7 ')) {
-        phoneInp.value = '+7 ' + phoneInp.value.replace('+7 ', '');
-    }
-    // Если введено достаточно цифр, показываем поле кода
-    if (phoneInp.value.length > 8) {
-        document.getElementById('sms-block').style.display = 'block';
-        if(!document.getElementById('auth-code').value) {
-            document.getElementById('auth-code').focus();
-        }
-    }
-}
-
-function tryLogin() {
-    const code = document.getElementById('auth-code').value;
-    const name = document.getElementById('auth-name').value;
+// === ЛОГИКА АВТОРИЗАЦИИ ===
+function sendSms() {
+    const codeBlock = document.getElementById('sms-block');
+    const btn = document.getElementById('btn-login-action');
     
-    if (code === '1234' && name) {
-        currentProfile.name = name;
-        updateProfileUI();
+    if(codeBlock.style.display === 'none') {
+        // Шаг 1: Показать поле кода
+        codeBlock.style.display = 'block';
+        btn.innerText = "Войти";
+        document.getElementById('auth-code').focus(); // Автофокус
+    } else {
+        // Шаг 2: Вход
         document.getElementById('auth-screen').style.display = 'none';
-        isGuest = false;
-        switchTab('home');
-    } else {
-        alert("Введите имя и код 1234");
+        switchTab('home'); // Сразу домой
     }
 }
-
 function continueAsGuest() {
-    isGuest = true;
     document.getElementById('auth-screen').style.display = 'none';
-    switchTab('feed');
-    alert("Гостевой режим: Только просмотр ленты");
+    switchTab('feed'); // Гости только в ленту
 }
 
-function updateProfileUI() {
-    // Обновляем сайдбар
-    document.getElementById('profile-name').innerText = currentProfile.name;
-    document.getElementById('profile-phone').innerText = document.getElementById('auth-phone').value;
-    // Обновляем кабинет водителя
-    document.getElementById('driver-name-display').innerText = currentProfile.name;
-    if(currentProfile.avatar) {
-        const imgTag = `<img src="${currentProfile.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-        document.getElementById('sidebar-avatar').innerHTML = imgTag;
-        document.getElementById('driver-avatar-display').innerHTML = imgTag;
-    }
-}
-
-// Загрузка аватарки
-document.getElementById('avatar-input').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if(file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            currentProfile.avatar = e.target.result;
-            updateProfileUI();
-        }
-        reader.readAsDataURL(file);
-    }
-});
-
-// === НАВИГАЦИЯ ===
-function switchTab(tabId) {
-    if (isGuest && tabId !== 'feed') {
-        document.getElementById('auth-screen').style.display = 'flex';
-        return;
-    }
-
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.dock-item').forEach(b => b.classList.remove('active'));
-
-    if(tabId === 'home') {
-        document.getElementById('home-view').classList.add('active');
-        initMap();
-        document.querySelector('.ai-button').parentElement.style.transform = "scale(1.1)";
-    } else {
-         document.querySelector('.ai-button').parentElement.style.transform = "scale(1)";
-    }
-    
-    if(tabId === 'city') {
-        document.getElementById('city-view').classList.add('active');
-        // Переключаем на карту или афишу
-        setTimeout(() => { if(cityMap) cityMap.invalidateSize(); }, 200);
-    } else if (tabId !== 'home') {
-        document.getElementById(tabId + '-view').classList.add('active');
-    }
-    
-    // Подсветка кнопок докбара
-    if(tabId === 'city') document.querySelectorAll('.dock-item')[0].classList.add('active');
-    if(tabId === 'feed') document.querySelectorAll('.dock-item')[1].classList.add('active');
-    if(tabId === 'wallet') document.querySelectorAll('.dock-item')[2].classList.add('active');
-    if(tabId === 'driver') document.querySelectorAll('.dock-item')[3].classList.add('active');
-}
-
-// Сворачивание панели такси
-function togglePanel() {
+// === ЛОГИКА ГЛАВНОГО ЭКРАНА (ПАНЕЛЬ И КАРТА) ===
+function initPanelLogic() {
+    // Клик по карте (или фону) сворачивает/разворачивает панель
+    const mapContainer = document.getElementById('map-container');
     const panel = document.getElementById('main-panel');
-    const restoreBtn = document.querySelector('.restore-panel-btn');
-    const overlays = document.querySelector('.map-overlays');
     
-    panel.classList.toggle('minimized');
-    
-    if (panel.classList.contains('minimized')) {
-        restoreBtn.style.display = 'grid'; // Показать кнопку
-        overlays.style.bottom = "120px"; // Опустить кнопки
-    } else {
-        restoreBtn.style.display = 'none';
-        overlays.style.bottom = "380px"; // Поднять кнопки
-    }
+    // При клике на фон (карту)
+    mapContainer.addEventListener('click', () => {
+        isPanelCollapsed = !isPanelCollapsed;
+        if(isPanelCollapsed) {
+            panel.classList.add('collapsed');
+        } else {
+            panel.classList.remove('collapsed');
+        }
+    });
+}
+function togglePanelState() {
+    const panel = document.getElementById('main-panel');
+    panel.classList.toggle('collapsed');
+    isPanelCollapsed = panel.classList.contains('collapsed');
 }
 
 // Выбор тарифа
 function selectTariff(el) {
-    document.querySelectorAll('.tariff').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('.tariff-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
 }
 
 // === КАРТЫ ===
 function initMap() {
     if(!map) {
-        map = L.map('map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
-        // Темная карта
+        map = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([49.80, 73.10], 13);
+        // ТЕМНАЯ КАРТА ПО УМОЛЧАНИЮ
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19
         }).addTo(map);
+        
+        // Обработчик клика по карте для сворачивания панели
+        map.on('click', () => {
+            togglePanelState();
+        });
     }
-    if(!cityMap) {
-        cityMap = L.map('city-map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19
-        }).addTo(cityMap);
-    }
+    setTimeout(() => map.invalidateSize(), 200);
 }
 
-function centerMap() { map.setView([49.80, 73.10], 14); }
-function centerCityMap() { cityMap.setView([49.80, 73.10], 14); }
+function initCityMap() {
+    if(!cityMap) {
+        cityMap = L.map('city-map-container', { zoomControl: false, attributionControl: false }).setView([49.80, 73.10], 13);
+        // Тоже темная карта для города
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(cityMap);
+    }
+    setTimeout(() => cityMap.invalidateSize(), 200);
+}
 
-// Вкладки города (Афиша/Карта)
+function centerMap() {
+    // Имитация геолокации
+    if(map) map.flyTo([49.80, 73.10], 14);
+}
+
+// === НАВИГАЦИЯ (TABS) ===
+function switchTab(id) {
+    // Скрываем все view
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.dock-item').forEach(b => b.classList.remove('active'));
+    
+    // Активируем нужный
+    const target = document.getElementById(id + '-view');
+    if(target) target.classList.add('active');
+    
+    // Обновляем иконки
+    if(id === 'home') setTimeout(initMap, 100);
+    if(id === 'city') {
+        document.querySelector('[onclick="switchTab(\'city\')"]').classList.add('active');
+        // По умолчанию открываем Афишу, но карта уже готова
+    }
+    if(id === 'feed') document.querySelector('[onclick="switchTab(\'feed\')"]').classList.add('active');
+    if(id === 'wallet') document.querySelector('[onclick="switchTab(\'wallet\')"]').classList.add('active');
+}
+
+// === ЛОГИКА ГОРОДА (АФИША / КАРТА) ===
 function switchCityTab(tab) {
-    document.querySelectorAll('.city-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.c-tab').forEach(t => t.classList.remove('active'));
+    // Кнопки
+    document.querySelectorAll('.c-tab').forEach(b => b.classList.remove('active'));
+    
+    // Контент
+    document.getElementById('tab-billboard').style.display = 'none';
+    document.getElementById('tab-citymap').style.display = 'none'; // Скрываем через display, чтобы не конфликтовали
     
     if(tab === 'billboard') {
-        document.getElementById('tab-billboard').classList.add('active');
         document.querySelectorAll('.c-tab')[0].classList.add('active');
+        document.getElementById('tab-billboard').style.display = 'block';
     } else {
-        document.getElementById('tab-citymap').classList.add('active');
         document.querySelectorAll('.c-tab')[1].classList.add('active');
-        setTimeout(() => cityMap.invalidateSize(), 100);
+        document.getElementById('tab-citymap').style.display = 'block';
+        initCityMap();
     }
 }
 
-// === ЛЕНТА (POSTS) ===
+// === ЛЕНТА И ПОСТЫ ===
+function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+    setTimeout(() => document.getElementById(id).querySelector('.modal-card') || document.getElementById(id).classList.add('active'), 10);
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).classList.add('hidden');
+}
+
+// Создание поста (Фото превью)
+const postImgInput = document.getElementById('post-img-input');
+if(postImgInput) {
+    postImgInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                document.getElementById('img-preview-area').classList.remove('hidden');
+                document.getElementById('img-preview-tag').src = ev.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+}
+function removeImg() {
+    document.getElementById('post-img-input').value = "";
+    document.getElementById('img-preview-area').classList.add('hidden');
+}
 function publishPost() {
     const text = document.getElementById('new-post-text').value;
-    if(!text) return;
+    if(!text) return alert("Напишите текст!");
     
-    const container = document.getElementById('feed-container');
-    const newId = 'post-' + Date.now();
-    
-    const html = `
-    <div class="post-card" id="${newId}">
+    // Добавляем пост в ленту (визуально)
+    const stream = document.getElementById('feed-stream');
+    const newPost = `
+    <div class="post-card">
         <div class="post-head">
-            <div class="avatar-circle">Я</div>
-            <div style="flex:1; margin-left:10px;">
-                <div class="name-row"><span class="name">${currentProfile.name}</span></div>
-                <div class="time">Только что</div>
-            </div>
-            <button class="trash-btn" onclick="deletePost('${newId}')"><ion-icon name="trash-outline"></ion-icon></button>
+            <div class="avatar-mini">Я</div>
+            <div class="ph-info"><span class="ph-name">Вы</span><span class="ph-time">Только что</span></div>
+            <button class="icon-btn-text text-danger" onclick="deletePost(this)"><ion-icon name="trash-outline"></ion-icon></button>
         </div>
-        <div class="post-content">${text}</div>
-        <div class="post-actions-bar">
-            <button class="act-btn" onclick="toggleLike(this)"><ion-icon name="heart-outline"></ion-icon> <span>0</span></button>
-            <button class="act-btn" onclick="openCommentModal('${newId}')"><ion-icon name="chatbubble-outline"></ion-icon></button>
+        <div class="post-text">${text}</div>
+        ${!document.getElementById('img-preview-area').classList.contains('hidden') ? '<div style="margin-top:10px; border-radius:10px; overflow:hidden;"><img src="'+document.getElementById('img-preview-tag').src+'" style="width:100%"></div>' : ''}
+        <div class="post-actions">
+            <button class="act-item"><ion-icon name="heart-outline"></ion-icon> 0</button>
+            <button class="act-item"><ion-icon name="chatbubble-outline"></ion-icon> 0</button>
         </div>
     </div>`;
     
-    container.insertAdjacentHTML('afterbegin', html);
+    stream.insertAdjacentHTML('afterbegin', newPost);
     closeModal('create-post-modal');
     document.getElementById('new-post-text').value = "";
+    removeImg();
 }
 
-function deletePost(id) {
+function deletePost(btn) {
     if(confirm("Удалить пост?")) {
-        const el = document.getElementById(id);
-        if(el) el.remove();
+        btn.closest('.post-card').remove();
     }
 }
-
 function toggleLike(btn) {
-    btn.classList.toggle('liked');
     const icon = btn.querySelector('ion-icon');
-    const countSpan = btn.querySelector('span');
-    let count = parseInt(countSpan.innerText);
-    
-    if(btn.classList.contains('liked')) {
-        icon.setAttribute('name', 'heart');
-        count++;
+    if(icon.name === 'heart-outline') {
+        icon.name = 'heart';
+        icon.style.color = '#ff453a';
     } else {
-        icon.setAttribute('name', 'heart-outline');
-        count--;
-    }
-    countSpan.innerText = count;
-}
-
-function openCommentModal(id) {
-    openModal('comment-thread-modal');
-}
-
-// === ЧАТ и AI ===
-function sendMessage() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    addMessageBubble(text, 'user');
-    input.value = '';
-    setTimeout(() => aiReply(text), 1000);
-}
-
-function addMessageBubble(text, sender) {
-    const container = document.querySelector('.chat-container');
-    const div = document.createElement('div');
-    div.className = 'ai-msg'; // Проверь в CSS есть ли этот класс (добавим если нет)
-    div.style.display = 'flex';
-    div.style.marginBottom = '10px';
-    
-    if(sender === 'user') {
-        div.style.justifyContent = 'flex-end';
-        div.innerHTML = `<div style="background:var(--accent); color:white; padding:10px 15px; border-radius:15px 15px 0 15px;">${text}</div>`;
-    } else {
-        div.innerHTML = `<div style="background:rgba(255,255,255,0.1); padding:10px 15px; border-radius:15px 15px 15px 0;">${text}</div>`;
-    }
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-}
-
-function aiReply(text) {
-    addMessageBubble("Ищу свободную машину...", 'ai');
-}
-
-
-// === ТОРГ И ЗАКАЗ ===
-function openOrderNegotiation() { openModal('order-negotiation-modal'); }
-
-function offerMyPrice() {
-    const p = prompt("Ваша цена:");
-    if(p) document.querySelector('.offer-price-display').innerText = p + " ₸";
-}
-
-function sendDriverOffer() {
-    closeModal('order-negotiation-modal');
-    setTimeout(() => {
-        const price = document.querySelector('.offer-price-display').innerText;
-        document.getElementById('client-offer-price').innerText = price;
-        openModal('client-decision-modal');
-    }, 1000);
-}
-
-function clientAccept() {
-    closeModal('client-decision-modal');
-    alert("Клиент принял предложение! Поехали.");
-}
-
-// === НАСТРОЙКИ (САЙДБАР) ===
-function toggleSidebar() {
-    const sb = document.getElementById('sidebar');
-    sb.classList.toggle('open');
-    if(!sb.classList.contains('open')) {
-        setTimeout(() => closeSubMenu(), 300);
+        icon.name = 'heart-outline';
+        icon.style.color = 'white';
     }
 }
 
-function openSubMenu(id) {
-    document.getElementById('sidebar-main').style.display = 'none';
-    document.getElementById('sidebar-' + id).style.display = 'block';
+// === НАСТРОЙКИ (НОВЫЙ ЭКРАН) ===
+function openSettings() {
+    document.getElementById('settings-view').classList.add('active');
+}
+function closeSettings() {
+    document.getElementById('settings-view').classList.remove('active');
+}
+function openSubSetting(id) {
+    document.getElementById(id).classList.add('active');
+}
+function closeSubSetting(id) {
+    document.getElementById(id).classList.remove('active');
 }
 
-function closeSubMenu() {
-    document.querySelectorAll('.sidebar-sub').forEach(el => el.style.display = 'none');
-    document.getElementById('sidebar-main').style.display = 'block';
+// Редактирование профиля
+function saveProfile() {
+    const newName = document.getElementById('edit-name-inp').value;
+    document.getElementById('settings-name-preview').innerText = newName;
+    alert("Профиль сохранен!");
+    closeSubSetting('profile-edit');
 }
-
-// === UTIL ===
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-function openWalletModal(type) { openModal('wallet-action-modal'); }
