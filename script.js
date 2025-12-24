@@ -1,223 +1,367 @@
-// --- Глобальные переменные для карт ---
-let homeMap; // Карта заказа такси
-let cityMap; // Карта города (в разделе City)
+// === TELEGRAM WEB APP ===
+const tg = window.Telegram?.WebApp;
+if (tg) { 
+    tg.ready(); 
+    tg.expand(); 
+    tg.setHeaderColor('#000000'); 
+    tg.enableClosingConfirmation(); 
+}
 
-// --- Инициализация карт 2ГИС ---
-// Весь код работы с картой должен быть внутри DG.then()
-DG.then(function () {
-    // 1. Инициализация главной карты (Home View)
-    homeMap = DG.map('map-container', {
-        center: [49.8029, 73.1021], // Центр Караганды
-        zoom: 16,
-        zoomControl: false,      // Скрываем стандартные кнопки зума
-        fullscreenControl: false, // Скрываем кнопку полного экрана
-        geoclicker: true         // Разрешаем кликать по зданиям
-    });
+// === ПЕРЕМЕННЫЕ ===
+let map, cityMap; // Разные переменные для двух карт
+let userMarker;
+let isGuest = false; // Флаг гостя
+let currentLang = 'ru'; // Текущий язык
 
-    // Добавим маркер "Я" (центр экрана)
-    DG.marker([49.8029, 73.1021]).addTo(homeMap);
+// Словарь переводов
+const translations = {
+    ru: {
+        tab_city: "Город",
+        tab_feed: "Лента",
+        tab_wallet: "Кошелек",
+        tab_driver: "Водитель",
+        btn_go: "Поехали",
+        auth_title: "Aitax ID",
+        guest_link: "Продолжить как гость"
+    },
+    kz: {
+        tab_city: "Қала",
+        tab_feed: "Желі",
+        tab_wallet: "Әмиян",
+        tab_driver: "Жүргізуші",
+        btn_go: "Кеттік",
+        auth_title: "Aitax ID",
+        guest_link: "Қонақ ретінде кіру"
+    }
+};
 
-    // 2. Инициализация карты города (City View)
-    cityMap = DG.map('city-map-container', {
-        center: [49.8029, 73.1021],
-        zoom: 13,
-        zoomControl: false,
-        fullscreenControl: false
-    });
+// === АВТОРИЗАЦИЯ (AUTH) ===
+
+// Показываем экран входа при старте
+document.addEventListener("DOMContentLoaded", () => {
+    // По умолчанию показываем экран авторизации
+    document.getElementById('auth-screen').style.display = 'flex';
 });
 
-// --- Логика навигации (Таббар) ---
-function switchTab(tabId) {
-    // Скрываем все view
-    document.querySelectorAll('.view').forEach(el => {
-        el.classList.remove('active');
-        // Скрываем с анимацией (опционально) или просто display: none через CSS
-    });
-    
-    // Показываем нужный
-    const target = document.getElementById(tabId + '-view');
-    if (target) {
-        target.classList.add('active');
-    }
-
-    // Обновляем иконки в доке
-    document.querySelectorAll('.dock-item').forEach(btn => {
-        // Простая логика подсветки (можно доработать по ID)
-        btn.style.color = 'var(--text-gray)';
-    });
-    
-    // Спец-обработка для карты при переключении табов
-    // (Иногда карта может стать серой, если инициализировалась в скрытом блоке)
-    if (tabId === 'home' && homeMap) {
-        homeMap.invalidateSize();
-    }
-    if (tabId === 'city' && cityMap) {
-        // Если мы сразу попали на вкладку карты внутри сити
-        setTimeout(() => cityMap.invalidateSize(), 100);
-    }
-}
-
-// --- Логика раздела City (Афиша / Карта) ---
-function switchCityTab(tabName) {
-    // Переключение кнопок
-    document.querySelectorAll('.c-tab').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-
-    // Переключение контента
-    document.querySelectorAll('.city-content').forEach(el => el.classList.remove('active'));
-    
-    if (tabName === 'billboard') {
-        document.getElementById('tab-billboard').classList.add('active');
-    } else {
-        document.getElementById('tab-citymap').classList.add('active');
-        // Важно: пересчитать размеры карты при показе
-        if (cityMap) {
-            cityMap.invalidateSize(); 
-        }
-    }
-}
-
-// --- Логика панели заказа (шторка) ---
-let isPanelOpen = false;
-function togglePanelState() {
-    const panel = document.getElementById('main-panel');
-    isPanelOpen = !isPanelOpen;
-    
-    if (isPanelOpen) {
-        panel.style.transform = 'translateY(0)'; // Полностью открыта
-        // panel.style.height = '80%'; // Можно менять высоту динамически
-    } else {
-        panel.style.transform = 'translateY(calc(100% - 180px))'; // Свернута, торчит низ
-    }
-}
-
-// Выбор тарифа
-function selectTariff(el) {
-    document.querySelectorAll('.tariff-card').forEach(card => card.classList.remove('selected'));
-    el.classList.add('selected');
-}
-
-// Центрирование карты (кнопка навигации)
-function centerMap() {
-    if (homeMap) {
-        homeMap.setView([49.8029, 73.1021], 16);
-    }
-}
-
-// --- Модальные окна ---
-function openModal(id) {
-    document.getElementById(id).classList.remove('hidden');
-    document.getElementById(id).style.display = 'flex';
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-    setTimeout(() => {
-        document.getElementById(id).style.display = 'none';
-    }, 200); // Задержка для анимации если есть
-}
-
-// --- Настройки (Settings) ---
-function openSettings() {
-    document.getElementById('settings-view').classList.add('active');
-}
-
-function closeSettings() {
-    document.getElementById('settings-view').classList.remove('active');
-}
-
-function openSubSetting(id) {
-    document.getElementById(id).classList.remove('hidden');
-    document.getElementById(id).classList.add('active');
-}
-
-function closeSubSetting(id) {
-    document.getElementById(id).classList.remove('active');
-    setTimeout(() => {
-        document.getElementById(id).classList.add('hidden');
-    }, 300);
-}
-
-// --- AI Чат (заглушка) ---
-function sendMessage() {
-    const input = document.getElementById('chatInput');
-    const area = document.getElementById('ai-response-area');
-    
-    if (input.value.trim() === "") return;
-
-    area.style.display = 'block';
-    area.innerHTML = `<div class="ai-loading">Думаю...</div>`;
-    
-    setTimeout(() => {
-        area.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-                <ion-icon name="sparkles" style="color:var(--accent)"></ion-icon>
-                <span>Маршрут построен! Ехать 12 минут. Стоимость ~950₸</span>
-            </div>
-        `;
-    }, 1500);
-}
-
-function startOrder() {
-    // Логика начала поиска водителя
-    openModal('order-negotiation-modal');
-}
-
-// --- Кошелек (Модалки) ---
-function openWalletModal(type) {
-    const title = type === 'deposit' ? 'Пополнение' : 'Перевод';
-    alert(`Открываем окно: ${title} (В разработке)`);
-}
-
-// --- Аутентификация (Заглушка) ---
+// Логика отправки СМС
 function sendSms() {
-    document.getElementById('btn-login-action').innerText = 'Отправить снова';
-    document.getElementById('sms-block').style.display = 'block';
+    const phone = document.getElementById('auth-phone').value;
+    const name = document.getElementById('auth-name').value;
+    
+    if (phone.length < 10 || name.length < 2) {
+        if(tg) tg.showAlert("Введите имя и номер!");
+        else alert("Введите имя и номер!");
+        return;
+    }
+
+    const btn = document.getElementById('btn-login-action');
+    const smsBlock = document.getElementById('sms-block');
+
+    if (smsBlock.style.display === 'none') {
+        // Шаг 1: Показать поле СМС
+        smsBlock.style.display = 'block';
+        btn.innerText = "Войти";
+        if(tg) tg.showAlert(`Код отправлен на ${phone}`);
+    } else {
+        // Шаг 2: Проверка кода (Имитация)
+        completeLogin(name, phone);
+    }
+}
+
+function completeLogin(name, phone) {
+    document.getElementById('auth-screen').style.display = 'none';
+    isGuest = false;
+    
+    // Обновляем данные в профиле
+    document.getElementById('profile-name').innerText = name;
+    document.getElementById('profile-phone').innerText = phone;
+    
+    switchTab('home'); // Пускаем в приложение
 }
 
 function continueAsGuest() {
     document.getElementById('auth-screen').style.display = 'none';
+    isGuest = true;
+    document.getElementById('profile-name').innerText = "Гость";
+    
+    // Гостям можно ТОЛЬКО в Ленту
+    switchTab('feed');
+    
+    if(tg) tg.showAlert("Режим гостя: Доступна только Лента");
 }
 
-// --- Соцсеть (Feed) ---
-function toggleLike(btn) {
-    const icon = btn.querySelector('ion-icon');
-    if (icon.name === 'heart-outline') {
-        icon.name = 'heart';
-        icon.style.color = '#ff4757';
-        btn.style.color = '#ff4757';
+// === ГЛАВНАЯ НАВИГАЦИЯ ===
+function switchTab(tabId) {
+    // ПРОВЕРКА ГОСТЯ
+    if (isGuest && tabId !== 'feed') {
+        // Если гость пытается уйти с ленты -> просим авторизацию
+        document.getElementById('auth-screen').style.display = 'flex';
+        return;
+    }
+
+    // 1. Скрываем все экраны
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+
+    // 2. Убираем подсветку у кнопок
+    document.querySelectorAll('.dock-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    // Снимаем подсветку с кнопки AI отдельно
+    document.querySelector('.ai-button').classList.remove('active');
+
+    // 3. Логика переключения
+    const dockItems = document.querySelectorAll('.dock-item');
+    // dockItems[0] = City, [1] = Feed, [2] = Wallet, [3] = Driver
+    
+    if (tabId === 'city') {
+        document.getElementById('city-view').classList.add('active');
+        dockItems[0].classList.add('active');
+        // Инициализируем карту города, если открыта вкладка карты
+        setTimeout(() => { if(cityMap) cityMap.invalidateSize(); }, 100);
+    } 
+    else if (tabId === 'feed') {
+        document.getElementById('feed-view').classList.add('active');
+        dockItems[1].classList.add('active');
+    } 
+    else if (tabId === 'home') {
+        document.getElementById('home-view').classList.add('active');
+        document.querySelector('.ai-button').classList.add('active');
+        
+        // Карта такси
+        setTimeout(() => { 
+            if(!map) initMap(); 
+            else map.invalidateSize(); 
+        }, 100);
+    } 
+    else if (tabId === 'wallet') {
+        document.getElementById('wallet-view').classList.add('active');
+        dockItems[2].classList.add('active');
+    } 
+    else if (tabId === 'driver') {
+        document.getElementById('driver-view').classList.add('active');
+        dockItems[3].classList.add('active');
+    }
+
+    if(tg) tg.HapticFeedback.selectionChanged();
+}
+
+// === РАЗДЕЛ ГОРОД (Вкладки) ===
+function switchCityTab(subTab) {
+    // Кнопки
+    document.querySelectorAll('.c-tab').forEach(b => b.classList.remove('active'));
+    // Контент
+    document.querySelectorAll('.city-content').forEach(c => c.classList.remove('active'));
+
+    if (subTab === 'billboard') {
+        document.getElementById('tab-billboard').classList.add('active');
+        document.querySelectorAll('.c-tab')[0].classList.add('active');
     } else {
-        icon.name = 'heart-outline';
-        icon.style.color = 'inherit';
-        btn.style.color = 'inherit';
+        document.getElementById('tab-citymap').classList.add('active');
+        document.querySelectorAll('.c-tab')[1].classList.add('active');
+        // Инициализация карты города
+        setTimeout(() => initCityMap(), 100);
     }
 }
 
-function publishPost() {
-    const text = document.getElementById('new-post-text').value;
+// === КАРТЫ (LEAFLET) ===
+function initMap() { // Карта такси
+    const mapDiv = document.getElementById('map-container');
+    if(mapDiv && !map) {
+        map = L.map('map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '', maxZoom: 19
+        }).addTo(map);
+        centerMap();
+    }
+}
+
+function initCityMap() { // Карта города (заведения)
+    const mapDiv = document.getElementById('city-map-container');
+    if(mapDiv && !cityMap) {
+        cityMap = L.map('city-map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { // Светлая для города
+            attribution: '', maxZoom: 19
+        }).addTo(cityMap);
+        
+        // Пример меток
+        L.marker([49.805, 73.09]).addTo(cityMap).bindPopup("Кинотеатр Ленина");
+        L.marker([49.81, 73.11]).addTo(cityMap).bindPopup("Сити Молл");
+    }
+}
+
+function centerMap() {
+    if(!map) { initMap(); return; }
+    map.locate({setView: true, maxZoom: 14});
+    map.on('locationfound', (e) => {
+        if(userMarker) map.removeLayer(userMarker);
+        userMarker = L.marker(e.latlng).addTo(map);
+    });
+}
+
+// === ЧАТ И AI ===
+// Обработка кнопки внутри инпута
+const chatInp = document.getElementById('chatInput');
+if(chatInp) {
+    chatInp.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+}
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
     if (!text) return;
+
+    addMessageBubble(text, 'user');
+    input.value = '';
+
+    setTimeout(() => aiReply(text), 800);
+}
+
+function addMessageBubble(text, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'ai-msg';
+
+    if (sender === 'user') {
+        msgDiv.style.justifyContent = 'flex-end';
+        msgDiv.innerHTML = `<div class="msg-bubble" style="background:var(--accent); color:white;">${text}</div>`;
+    } else {
+        msgDiv.innerHTML = `<div class="ai-avatar">Ai</div><div class="msg-bubble">${text}</div>`;
+    }
+
+    let container = document.querySelector('.chat-container');
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+    if(tg) tg.HapticFeedback.selectionChanged();
+}
+
+function aiReply(text) {
+    let reply = "Ищу варианты...";
+    const lower = text.toLowerCase();
     
-    // Создаем HTML нового поста
-    const feed = document.getElementById('feed-stream');
-    const newPost = document.createElement('div');
-    newPost.className = 'post-card';
-    newPost.innerHTML = `
-        <div class="post-head">
-            <div class="avatar-mini"><ion-icon name="person"></ion-icon></div>
-            <div class="ph-info">
-                <span class="ph-name">Гость</span>
-                <span class="ph-time">Только что</span>
-            </div>
-        </div>
-        <div class="post-text">${text}</div>
-        <div class="post-actions">
-            <button class="act-item" onclick="toggleLike(this)">
-                <ion-icon name="heart-outline"></ion-icon> <span class="count">0</span>
-            </button>
-        </div>
-    `;
+    if(lower.includes("привет")) reply = "Салем! Куда поедем?";
+    else if(lower.includes("розовое")) reply = "Включил тариф Lady. Женщина водитель скоро приедет.";
+    else if(lower.includes("кафе")) reply = "Показываю лучшие кафе на карте города.";
     
-    feed.prepend(newPost);
-    closeModal('create-post-modal');
-    document.getElementById('new-post-text').value = '';
+    addMessageBubble(reply, 'ai');
+}
+
+// === КОШЕЛЕК И МОДАЛКИ ===
+function openWalletModal(type) {
+    const modal = document.getElementById('wallet-action-modal');
+    const title = document.getElementById('wallet-modal-title');
+    const qrView = document.getElementById('qr-view');
+    const inputs = document.getElementById('wallet-inputs');
+    
+    openModal('wallet-action-modal');
+
+    qrView.style.display = 'none';
+    inputs.style.display = 'block';
+
+    if (type === 'deposit') {
+        title.innerText = "Пополнение";
+    } else if (type === 'transfer') {
+        title.innerText = "Перевод";
+    } else if (type === 'qr') {
+        title.innerText = "Сканировать QR";
+        qrView.style.display = 'block';
+        inputs.style.display = 'none';
+    }
+}
+
+// === ЛЕНТА (THREADS) ===
+function sharePost(id) {
+    // Имитация шаринга -> открывает создание поста (как в ТЗ)
+    if(tg) tg.HapticFeedback.impactOccurred('medium');
+    // По ТЗ: "карточка для нового поста должна открывать по кнопке-панель Поделиться"
+    // Но обычно Поделиться = Share, а Создать = Create.
+    // Реализуем логику: кнопка Share открывает нативный выбор или ссылку
+    
+    // Но если задача "По кнопке поделиться... открывать панель", то вот:
+    const composer = document.querySelector('.feed-composer textarea');
+    composer.focus();
+    composer.scrollIntoView({behavior: "smooth"});
+}
+
+function openComments(postId) {
+    openModal('thread-view-modal');
+}
+
+// === ВОДИТЕЛЬ (ТОРГ) ===
+function openOrderNegotiation(id) {
+    openModal('order-negotiation-modal');
+}
+
+function offerMyPrice() {
+    const price = prompt("Введите вашу цену:");
+    if(price) {
+        document.querySelector('.offer-price-display').innerText = price + " ₸";
+        if(tg) tg.showAlert("Цена предложена клиенту");
+    }
+}
+
+function acceptPrice() {
+    closeModal('order-negotiation-modal');
+    if(tg) tg.showAlert("Вы взяли заказ!");
+}
+
+// === НАСТРОЙКИ ===
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+function toggleLanguage() {
+    currentLang = currentLang === 'ru' ? 'kz' : 'ru';
+    document.getElementById('lang-label').innerText = `Язык: ${currentLang === 'ru' ? 'Русский' : 'Қазақша'}`;
+    
+    // Применяем переводы (Демо)
+    // В реальном проекте тут нужно пройтись по всем data-i18n атрибутам
+    if(tg) tg.showAlert(`Язык изменен на ${currentLang.toUpperCase()}`);
+}
+
+function toggleTheme() {
+    // Демо смены темы
+    const body = document.body;
+    if (body.style.getPropertyValue('--bg-gradient').includes('1a1a1a')) {
+         // Светлая/Цветная тема
+         body.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #2b0042, #4c0045)');
+    } else {
+        // Дефолтная тема
+        body.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)');
+    }
+}
+
+// Загрузка аватарки
+const avatarInput = document.getElementById('avatar-input');
+if(avatarInput) {
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgUrl = e.target.result;
+                // Обновляем аватарки в меню и в ленте
+                document.getElementById('sidebar-avatar').innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// === ОБЩИЕ ФУНКЦИИ МОДАЛОК ===
+function openModal(id) {
+    const m = document.getElementById(id);
+    if(m) { 
+        m.classList.remove('hidden'); 
+        setTimeout(() => m.classList.add('active'), 10); // Hack for transition
+    }
+}
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if(m) { 
+        m.classList.remove('active'); 
+        setTimeout(() => m.classList.add('hidden'), 300); 
+    }
 }
