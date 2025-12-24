@@ -9,7 +9,6 @@ if (tg) {
 
 // === ПЕРЕМЕННЫЕ ===
 let map, cityMap; // Разные переменные для двух карт
-let bgMap; // НОВАЯ ПЕРЕМЕННАЯ ДЛЯ ФОНОВОЙ КАРТЫ
 let userMarker;
 let isGuest = false; // Флаг гостя
 let currentLang = 'ru'; // Текущий язык
@@ -36,31 +35,13 @@ const translations = {
     }
 };
 
-// === АВТОРИЗАЦИЯ (AUTH) И ИНИЦИАЛИЗАЦИЯ ===
+// === АВТОРИЗАЦИЯ (AUTH) ===
 
 // Показываем экран входа при старте
 document.addEventListener("DOMContentLoaded", () => {
     // По умолчанию показываем экран авторизации
     document.getElementById('auth-screen').style.display = 'flex';
-    // Инициализируем фоновую карту сразу
-    initGlobalBgMap();
 });
-
-// НОВАЯ ФУНКЦИЯ ДЛЯ ФОНОВОЙ КАРТЫ
-function initGlobalBgMap() {
-    bgMap = L.map('global-bg-map', { 
-        zoomControl: false,
-        attributionControl: false,
-        dragging: false, // Запрещаем взаимодействие с фоном
-        scrollWheelZoom: false,
-        doubleClickZoom: false
-    }).setView([49.80, 73.10], 13);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19
-    }).addTo(bgMap);
-}
-
 
 // Логика отправки СМС
 function sendSms() {
@@ -245,4 +226,142 @@ function addMessageBubble(text, sender) {
 
     if (sender === 'user') {
         msgDiv.style.justifyContent = 'flex-end';
-        msgDiv.
+        msgDiv.innerHTML = `<div class="msg-bubble" style="background:var(--accent); color:white;">${text}</div>`;
+    } else {
+        msgDiv.innerHTML = `<div class="ai-avatar">Ai</div><div class="msg-bubble">${text}</div>`;
+    }
+
+    let container = document.querySelector('.chat-container');
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+    if(tg) tg.HapticFeedback.selectionChanged();
+}
+
+function aiReply(text) {
+    let reply = "Ищу варианты...";
+    const lower = text.toLowerCase();
+    
+    if(lower.includes("привет")) reply = "Салем! Куда поедем?";
+    else if(lower.includes("розовое")) reply = "Включил тариф Lady. Женщина водитель скоро приедет.";
+    else if(lower.includes("кафе")) reply = "Показываю лучшие кафе на карте города.";
+    
+    addMessageBubble(reply, 'ai');
+}
+
+// === КОШЕЛЕК И МОДАЛКИ ===
+function openWalletModal(type) {
+    const modal = document.getElementById('wallet-action-modal');
+    const title = document.getElementById('wallet-modal-title');
+    const qrView = document.getElementById('qr-view');
+    const inputs = document.getElementById('wallet-inputs');
+    
+    openModal('wallet-action-modal');
+
+    qrView.style.display = 'none';
+    inputs.style.display = 'block';
+
+    if (type === 'deposit') {
+        title.innerText = "Пополнение";
+    } else if (type === 'transfer') {
+        title.innerText = "Перевод";
+    } else if (type === 'qr') {
+        title.innerText = "Сканировать QR";
+        qrView.style.display = 'block';
+        inputs.style.display = 'none';
+    }
+}
+
+// === ЛЕНТА (THREADS) ===
+function sharePost(id) {
+    // Имитация шаринга -> открывает создание поста (как в ТЗ)
+    if(tg) tg.HapticFeedback.impactOccurred('medium');
+    // По ТЗ: "карточка для нового поста должна открывать по кнопке-панель Поделиться"
+    // Но обычно Поделиться = Share, а Создать = Create.
+    // Реализуем логику: кнопка Share открывает нативный выбор или ссылку
+    
+    // Но если задача "По кнопке поделиться... открывать панель", то вот:
+    const composer = document.querySelector('.feed-composer textarea');
+    composer.focus();
+    composer.scrollIntoView({behavior: "smooth"});
+}
+
+function openComments(postId) {
+    openModal('thread-view-modal');
+}
+
+// === ВОДИТЕЛЬ (ТОРГ) ===
+function openOrderNegotiation(id) {
+    openModal('order-negotiation-modal');
+}
+
+function offerMyPrice() {
+    const price = prompt("Введите вашу цену:");
+    if(price) {
+        document.querySelector('.offer-price-display').innerText = price + " ₸";
+        if(tg) tg.showAlert("Цена предложена клиенту");
+    }
+}
+
+function acceptPrice() {
+    closeModal('order-negotiation-modal');
+    if(tg) tg.showAlert("Вы взяли заказ!");
+}
+
+// === НАСТРОЙКИ ===
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+function toggleLanguage() {
+    currentLang = currentLang === 'ru' ? 'kz' : 'ru';
+    document.getElementById('lang-label').innerText = `Язык: ${currentLang === 'ru' ? 'Русский' : 'Қазақша'}`;
+    
+    // Применяем переводы (Демо)
+    // В реальном проекте тут нужно пройтись по всем data-i18n атрибутам
+    if(tg) tg.showAlert(`Язык изменен на ${currentLang.toUpperCase()}`);
+}
+
+function toggleTheme() {
+    // Демо смены темы
+    const body = document.body;
+    if (body.style.getPropertyValue('--bg-gradient').includes('1a1a1a')) {
+         // Светлая/Цветная тема
+         body.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #2b0042, #4c0045)');
+    } else {
+        // Дефолтная тема
+        body.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)');
+    }
+}
+
+// Загрузка аватарки
+const avatarInput = document.getElementById('avatar-input');
+if(avatarInput) {
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgUrl = e.target.result;
+                // Обновляем аватарки в меню и в ленте
+                document.getElementById('sidebar-avatar').innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// === ОБЩИЕ ФУНКЦИИ МОДАЛОК ===
+function openModal(id) {
+    const m = document.getElementById(id);
+    if(m) { 
+        m.classList.remove('hidden'); 
+        setTimeout(() => m.classList.add('active'), 10); // Hack for transition
+    }
+}
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if(m) { 
+        m.classList.remove('active'); 
+        setTimeout(() => m.classList.add('hidden'), 300); 
+    }
+}
