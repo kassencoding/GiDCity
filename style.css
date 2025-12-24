@@ -1,7 +1,7 @@
 :root {
     --bg-dark: #000000;
-    --glass: rgba(30, 30, 30, 0.65);
-    --glass-heavy: rgba(20, 20, 25, 0.92);
+    --glass: rgba(30, 30, 30, 0.6);
+    --glass-heavy: rgba(20, 20, 20, 0.9);
     --border: rgba(255, 255, 255, 0.15);
     --accent: #0a84ff;
     --danger: #ff453a;
@@ -19,24 +19,17 @@ body {
 #background-layer { position: absolute; inset: 0; background: radial-gradient(circle at 50% 100%, #1c1c1e, #000 80%); z-index: -2; }
 .cyber-grid { position: absolute; inset: 0; opacity: 0.1; background-size: 40px 40px; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); z-index: -1; pointer-events: none; }
 
-/* ОБЩИЕ СТИЛИ */
-.view { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; padding-top: 100px; padding-bottom: 110px; z-index: 10; flex-direction: column; }
+/* LAYOUT */
+.view { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; padding-top: 100px; padding-bottom: 100px; z-index: 10; flex-direction: column; }
 .view.active { display: flex; }
 .custom-scroll { overflow-y: auto; scrollbar-width: none; }
 .custom-scroll-x { overflow-x: auto; scrollbar-width: none; display: flex; gap: 10px; }
 
-/* СТЕКЛЯННЫЕ ПАНЕЛИ */
-.glass-panel {
-    background: var(--glass); 
-    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-    border: 1px solid var(--border);
-}
-
 /* КАРТА */
 #map-container, #city-map-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 0; background: #111; }
+/* Чтобы карта города не перекрывала кнопки Афиши */
 .city-fixed-top { position: absolute; top: 110px; left: 0; width: 100%; z-index: 50; padding: 0 20px; }
-.city-content { position: relative; z-index: 1; flex: 1; height: 100%; display: none; }
-.city-content.active { display: flex; flex-direction: column; }
+.city-content { position: relative; z-index: 1; flex: 1; height: 100%; }
 .city-tabs-header { display: flex; background: var(--glass-heavy); border: 1px solid var(--border); border-radius: 12px; padding: 4px; backdrop-filter: blur(20px); }
 .c-tab { flex: 1; background: transparent; border: none; color: var(--text-muted); padding: 8px; border-radius: 8px; transition: 0.3s; }
 .c-tab.active { background: rgba(255,255,255,0.2); color: #fff; }
@@ -51,24 +44,26 @@ body {
 /* ГЛАВНАЯ ПАНЕЛЬ (ORDER PANEL) */
 .order-panel {
     position: fixed; bottom: 0; left: 0; width: 100%;
+    background: rgba(20, 20, 25, 0.92); /* Темный, почти непрозрачный для читаемости */
+    backdrop-filter: blur(30px);
+    border-top: 1px solid var(--border);
     border-radius: 30px 30px 0 0;
     padding: 15px 20px 100px; /* Отступ под DockBar */
     z-index: 800;
     transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 -10px 40px rgba(0,0,0,0.7);
-    background: rgba(20, 20, 25, 0.95);
 }
 .order-panel.collapsed {
-    transform: translateY(calc(100% - 130px)); /* Оставляем только ИИ поле */
+    transform: translateY(calc(100% - 130px)); /* Оставляем только полоску ИИ */
 }
 .panel-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 15px; cursor: pointer; }
 
 /* АДРЕСА И ИНПУТЫ */
-.input-wrapper-glass {
+.input-wrapper.glass-style {
     background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 20px;
     padding: 8px 12px; display: flex; align-items: center; width: 100%;
 }
-.input-wrapper-glass input { width: 100%; background: none; border: none; color: #fff; font-size: 16px; margin-left: 10px; }
+.input-wrapper input { width: 100%; background: none; border: none; color: #fff; font-size: 16px; margin-left: 10px; }
 .btn-send-inside { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); border: none; color: #fff; display: grid; place-items: center; }
 
 .address-block { margin: 20px 0; }
@@ -96,9 +91,9 @@ body {
 }
 .btn-go { width: 100%; padding: 18px; border-radius: 18px; background: var(--accent); color: #fff; border: none; font-weight: 700; font-size: 18px; }
 
-/* ЛЕНТА */
+/* ЛЕНТА И МОДАЛКИ */
 .feed-filters { padding: 0 20px 15px; }
-.filter-chip { padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 13px; white-space: nowrap; margin-right: 8px; }
+.filter-chip { padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 13px; white-space: nowrap; }
 .filter-chip.active { background: #fff; color: #000; font-weight: 600; }
 
 .feed-composer-bar { 
@@ -107,43 +102,13 @@ body {
 }
 .composer-fake-input { flex: 1; color: var(--text-muted); font-size: 15px; }
 
-.post-card { border-radius: 24px; padding: 16px; margin: 0 20px 15px; }
+.post-card { background: rgba(255,255,255,0.05); border-radius: 24px; padding: 16px; margin: 0 20px 15px; border: 1px solid var(--border); }
 .post-head { display: flex; align-items: center; margin-bottom: 10px; }
 .ph-info { flex: 1; margin-left: 10px; display: flex; flex-direction: column; }
 .ph-name { font-weight: 600; font-size: 14px; }
 .ph-time { font-size: 11px; color: var(--text-muted); }
 .icon-btn-text { background: none; border: none; font-size: 18px; color: var(--text-muted); padding: 5px; }
 .text-danger { color: var(--danger); }
-
-/* КОШЕЛЕК */
-.wallet-glass-card { 
-    margin: 0 20px 30px; padding: 30px; border-radius: 30px; 
-    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); 
-    border: 1px solid var(--border); text-align: center;
-}
-.w-total { font-size: 40px; font-weight: 700; margin: 10px 0 25px; }
-.wallet-big-buttons { display: flex; gap: 15px; }
-.wb-btn { 
-    flex: 1; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 18px;
-    display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 14px;
-    border: 1px solid transparent; transition: 0.2s;
-}
-.wb-btn:active { background: rgba(255,255,255,0.2); }
-.wb-icon { font-size: 24px; }
-.h-item { 
-    margin: 0 20px 10px; padding: 15px; border-radius: 20px; display: flex; align-items: center; 
-}
-.h-icon { font-size: 24px; margin-right: 15px; color: var(--accent); }
-.h-info { flex: 1; font-size: 14px; }
-.h-info span { font-size: 11px; color: var(--text-muted); }
-
-/* ВОДИТЕЛЬ */
-.driver-block { margin: 0 20px 25px; padding: 25px; border-radius: 25px; display: flex; align-items: center; flex-direction: column; text-align: center; }
-.driver-avatar-icon { font-size: 40px; margin-bottom: 10px; color: var(--accent); }
-.section-title { margin: 0 20px 10px; font-size: 18px; font-weight: 700; }
-.order-strip { margin: 0 20px 10px; padding: 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; }
-.price-tag { font-size: 18px; font-weight: 800; margin-bottom: 5px; }
-.take-btn-big { background: var(--success-green); color: #000; border: none; padding: 8px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; }
 
 /* НАСТРОЙКИ (СПИСОК) */
 .settings-view { background: #000; padding-top: 50px; z-index: 2000; transform: translateX(100%); transition: 0.3s; }
@@ -162,23 +127,28 @@ body {
 .set-title { font-size: 16px; font-weight: 500; }
 .set-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .chev { color: var(--text-muted); font-size: 18px; }
-.profile-content { padding: 20px; }
-.avatar-upload-big { text-align: center; }
-.current-avatar-big { width: 100px; height: 100px; border-radius: 50%; background: #222; margin: 0 auto 15px; display: grid; place-items: center; font-size: 40px; }
-.edit-icon-btn { color: var(--accent); font-size: 14px; }
 
-/* МОДАЛКИ (LINE INPUT) */
-.modal-overlay { 
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 5000; 
-    display: flex; justify-content: center; align-items: center; display: none; 
+/* КОШЕЛЕК */
+.wallet-glass-card { 
+    margin: 0 20px 30px; padding: 30px; border-radius: 30px; 
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); 
+    border: 1px solid var(--border); text-align: center;
 }
-.modal-overlay.active { display: flex; }
-.modal-card { 
-    background: #1c1c1e; width: 90%; max-width: 400px; border-radius: 25px; padding: 25px; 
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 1px solid var(--border); 
-    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+.w-total { font-size: 40px; font-weight: 700; margin: 10px 0 25px; }
+.wallet-big-buttons { display: flex; gap: 15px; }
+.wb-btn { 
+    flex: 1; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 14px;
+    border: 1px solid transparent; transition: 0.2s;
 }
-@keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.wb-btn:active { background: rgba(255,255,255,0.2); }
+.wb-icon { font-size: 24px; }
+
+/* МОДАЛКИ (НОВЫЙ СТИЛЬ INPUT) */
+.glass-modal { background: #1c1c1e; width: 95%; max-width: 400px; border-radius: 25px; padding: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 1px solid var(--border); transform: translateY(100px) scale(0.95); transition: 0.3s; opacity: 0;}
+.modal-overlay.active .glass-modal { transform: translateY(0) scale(1); opacity: 1; }
+.modal-overlay { display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 5000; }
+.modal-overlay.hidden { display: none; }
 
 .line-input { 
     width: 100%; border: none; border-bottom: 1px solid rgba(255,255,255,0.3); 
@@ -190,8 +160,8 @@ body {
 .m-head-clean .text-accent { color: var(--accent); font-weight: 600; }
 .clean-textarea { width: 100%; background: transparent; border: none; color: #fff; font-size: 16px; height: 100px; resize: none; font-family: inherit; }
 
-/* АФИША */
-.ad-card { position: relative; border-radius: 20px; overflow: hidden; margin: 0 20px 20px; height: 200px; border: 1px solid var(--border); }
+/* АФИША КАРТОЧКИ */
+.ad-card { position: relative; border-radius: 20px; overflow: hidden; margin: 0 20px 20px; height: 200px; }
 .ad-img { width: 100%; height: 100%; object-fit: cover; }
 .ad-info-overlay { position: absolute; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(to top, #000, transparent); }
 
