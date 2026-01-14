@@ -71,7 +71,7 @@
             <ion-icon name="color-palette-outline"></ion-icon> 
             Темы (Градиент)
         </div>
-        <div class="set-item">
+        <div class="set-item" onclick="openModal('settings-modal')">
             <ion-icon name="settings-outline"></ion-icon> 
             Настройки
         </div>
@@ -89,11 +89,11 @@
                     <div class="ad-badge">Promoted</div>
                     <img src="https://placehold.co/600x300/1a1a1a/FFF?text=Concert+Show" class="ad-img">
                     <div class="ad-info">
-                        <h3>Грандиозный концерт</h3>
-                        <p>Скидки 50% на билеты только сегодня!</p>
+                    <h3>Грандиозный концерт</h3>
+                    <p>Скидки 50% на билеты только сегодня!</p>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div id="tab-citymap" class="city-content">
@@ -117,7 +117,7 @@
                 <div class="input-wrapper improved">
                     <input type="text" placeholder="AI чат или адрес..." id="chatInput">
                     <button class="btn-send-inside" onclick="sendMessage()">
-                        <ion-icon name="arrow-up"></ion-icon>
+                    <ion-icon name="arrow-up"></ion-icon>
                     </button>
                 </div>
             </div>
@@ -126,16 +126,16 @@
                 <div class="input-line">
                     <ion-icon name="navigate" style="color:var(--accent)"></ion-icon>
                     <div class="addr-text">
-                        <div class="lbl">Откуда</div>
-                        <div class="val">Мое местоположение</div>
+                    <div class="lbl">Откуда</div>
+                    <div class="val" id="order-from">Мое местоположение</div>
                     </div>
                 </div>
                 <div class="divider-h"></div>
                 <div class="input-line">
                     <ion-icon name="location" style="color:#ff4757"></ion-icon>
                     <div class="addr-text">
-                        <div class="lbl">Куда</div>
-                        <input type="text" class="clean-addr-inp" placeholder="Укажите точку Б">
+                    <div class="lbl">Куда</div>
+                    <input type="text" class="clean-addr-inp" id="order-to" placeholder="Укажите точку Б">
                     </div>
                 </div>
             </div>
@@ -143,19 +143,19 @@
             <div class="options-row">
                 <div class="opt-box" onclick="openModal('comment-modal')">
                     <div class="lbl">Комментарий</div>
-                    <div>Указать...</div>
+                    <div id="comment-display">Указать...</div>
                 </div>
-                <div class="opt-box">
-                    <div class="lbl">Время</div>
-                    <div>Сейчас</div>
+                <div class="opt-box" onclick="openModal('intercity-modal')">
+                    <div class="lbl">Межгород</div>
+                    <div id="intercity-display">Выбрать</div>
                 </div>
             </div>
 
             <div class="tariffs-row custom-scroll-x">
-                <div class="tariff selected">Эконом</div>
-                <div class="tariff">Комфорт</div>
-                <div class="tariff">Бизнес</div>
-                <div class="tariff pink-taxi" style="color:#ff69b4; border-color:#ff69b4;">Lady 🌸</div>
+                <div class="tariff selected" data-tariff="economy">Эконом</div>
+                <div class="tariff" data-tariff="comfort">Комфорт</div>
+                <div class="tariff" data-tariff="business">Бизнес</div>
+                <div class="tariff pink-taxi" data-tariff="lady" style="color:#ff69b4; border-color:#ff69b4;">Lady 🌸</div>
             </div>
 
             <button class="btn-go" onclick="startOrder()">Поехали</button>
@@ -166,19 +166,19 @@
         <div class="feed-composer">
             <div class="composer-top">
                 <div class="avatar-circle"><ion-icon name="person"></ion-icon></div>
-                <div class="composer-placeholder" onclick="openModal('create-post-modal')">Что нового?</div>
+                <div class="composer-placeholder" onclick="openCreatePostModal()">Что нового?</div>
             </div>
         </div>
         
         <div class="feed-stream">
-            <div class="post-card">
+            <div class="post-card" data-static="1">
                 <div class="post-head">
                     <div class="avatar-circle" style="width:36px; height:36px;">A</div>
                     <div style="flex:1; margin-left:10px;">
-                        <div class="name-row">
-                            <span class="name">Admin</span>
-                            <span class="verified"><ion-icon name="checkmark-circle"></ion-icon></span>
-                        </div>
+                    <div class="name-row">
+                    <span class="name">Admin</span>
+                    <span class="verified"><ion-icon name="checkmark-circle"></ion-icon></span>
+                    </div>
                     </div>
                     <div class="time">2ч</div>
                     <button class="more-btn"><ion-icon name="ellipsis-horizontal"></ion-icon></button>
@@ -235,21 +235,56 @@
             <div class="driver-name">Водитель</div>
             <div class="car-details">Ожидание заказов...</div>
         </div>
-        <div class="section-title">Эфир заказов</div>
-        <div class="orders-list">
-            <div class="order-strip">
-                <div class="route-info">
-                    <div style="font-weight:700;">Центр → Юго-Восток</div>
-                    <div style="font-size:12px; color:gray; margin-top:4px;">Эконом • 5.2 км</div>
+        
+        <div class="driver-tabs-header">
+            <button class="d-tab active" onclick="switchDriverTab('city')">Город</button>
+            <button class="d-tab" onclick="switchDriverTab('intercity')">Межгород</button>
+        </div>
+
+        <div id="driver-city-orders" class="driver-content active">
+            <div class="section-title">Эфир заказов (Город)</div>
+            <div class="orders-list">
+                <div class="order-strip">
+                    <div class="route-info">
+                        <div style="font-weight:700;">Центр → Юго-Восток</div>
+                        <div style="font-size:12px; color:gray; margin-top:4px;">Эконом • 5.2 км</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="price-tag">1800 ₸</div>
+                        <button class="take-btn-big" onclick="openOrderNegotiation(1)">Взять</button>
+                    </div>
                 </div>
-                <div style="text-align:right;">
-                    <div class="price-tag">1800 ₸</div>
-                    <button class="take-btn-big" onclick="openOrderNegotiation(1)">Взять</button>
+            </div>
+        </div>
+
+        <div id="driver-intercity-orders" class="driver-content">
+            <div class="section-title">Эфир заказов (Межгород)</div>
+            <div class="orders-list">
+                <div class="order-strip intercity-order">
+                    <div class="route-info">
+                        <div style="font-weight:700;">Караганда → Астана</div>
+                        <div style="font-size:12px; color:gray; margin-top:4px;">Комфорт • 210 км • 3 места</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="price-tag">25 000 ₸</div>
+                        <button class="take-btn-big" onclick="openOrderNegotiation(2)">Взять</button>
+                    </div>
+                </div>
+                <div class="order-strip intercity-order">
+                    <div class="route-info">
+                        <div style="font-weight:700;">Караганда → Алматы</div>
+                        <div style="font-size:12px; color:gray; margin-top:4px;">Бизнес • 650 км • 2 места</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="price-tag">60 000 ₸</div>
+                        <button class="take-btn-big" onclick="openOrderNegotiation(3)">Взять</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- МОДАЛКИ -->
     <div class="modal-overlay hidden" id="comment-modal">
         <div class="modal-card">
             <div class="m-head">
@@ -257,9 +292,94 @@
                 <button class="close-m" onclick="closeModal('comment-modal')"><ion-icon name="close"></ion-icon></button>
             </div>
             <div class="input-group-modal">
-                <input type="text" class="modal-inp" placeholder="Например: с ребенком, пустой багажник...">
+                <input type="text" class="modal-inp" id="comment-input" placeholder="Например: с ребенком, пустой багажник...">
             </div>
-            <button class="btn-full" onclick="closeModal('comment-modal')">Сохранить</button>
+            <button class="btn-full" onclick="saveComment()">Сохранить</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="intercity-modal">
+        <div class="modal-card">
+            <div class="m-head">
+                <h3>Межгород</h3>
+                <button class="close-m" onclick="closeModal('intercity-modal')"><ion-icon name="close"></ion-icon></button>
+            </div>
+            <div class="input-group-modal">
+                <label style="font-size:13px; color:var(--text-muted); margin-bottom:8px; display:block;">Откуда</label>
+                <select class="modal-inp" id="intercity-from">
+                    <option value="Караганда">Караганда</option>
+                    <option value="Темиртау">Темиртау</option>
+                    <option value="Астана">Астана</option>
+                    <option value="Алматы">Алматы</option>
+                    <option value="Балхаш">Балхаш</option>
+                    <option value="Шымкент">Шымкент</option>
+                </select>
+
+                <label style="font-size:13px; color:var(--text-muted); margin:16px 0 8px; display:block;">Куда</label>
+                <select class="modal-inp" id="intercity-to">
+                    <option value="Астана">Астана</option>
+                    <option value="Алматы">Алматы</option>
+                    <option value="Караганда">Караганда</option>
+                    <option value="Темиртау">Темиртау</option>
+                    <option value="Балхаш">Балхаш</option>
+                    <option value="Шымкент">Шымкент</option>
+                </select>
+
+                <label style="font-size:13px; color:var(--text-muted); margin:16px 0 8px; display:block;">Количество мест</label>
+                <input type="number" class="modal-inp" id="intercity-seats" value="1" min="1" max="4">
+            </div>
+            <button class="btn-full" onclick="saveIntercity()">Сохранить</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="settings-modal">
+        <div class="modal-card">
+            <div class="m-head">
+                <h3>Настройки</h3>
+                <button class="close-m" onclick="closeModal('settings-modal')"><ion-icon name="close"></ion-icon></button>
+            </div>
+
+            <div class="settings-list">
+                <button class="settings-row" onclick="toggleLanguage()">
+                    <span>Язык</span>
+                    <span class="muted" id="settings-lang-value">Русский</span>
+                </button>
+
+                <button class="settings-row" onclick="toggleTheme()">
+                    <span>Тема</span>
+                    <span class="muted">Градиент</span>
+                </button>
+
+                <button class="settings-row" onclick="logoutDemo()">
+                    <span>Выйти</span>
+                    <span class="muted">Demo</span>
+                </button>
+            </div>
+
+            <button class="btn-full" onclick="closeModal('settings-modal')">Готово</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="create-post-modal">
+        <div class="modal-card full-height">
+            <div class="m-head">
+                <h3>Новый пост</h3>
+                <button class="close-m" onclick="closeCreatePost()"><ion-icon name="close"></ion-icon></button>
+            </div>
+
+            <textarea id="create-post-text" class="post-textarea" placeholder="Что нового?"></textarea>
+
+            <div class="post-attach-row">
+                <label class="attach-btn" for="create-post-image">
+                    <ion-icon name="image-outline"></ion-icon>
+                    <span>Фото</span>
+                </label>
+                <input type="file" id="create-post-image" hidden accept="image/*">
+            </div>
+
+            <div id="create-post-preview" class="post-preview hidden"></div>
+
+            <button class="btn-full" onclick="submitPost()">Опубликовать</button>
         </div>
     </div>
 
