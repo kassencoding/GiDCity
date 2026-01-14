@@ -3,15 +3,18 @@ const tg = window.Telegram?.WebApp;
 if (tg) { 
     tg.ready(); 
     tg.expand(); 
-    tg.setHeaderColor('#000000'); 
+    tg.setHeaderColor('#0000'); 
     tg.enableClosingConfirmation(); 
 }
 
 // === ПЕРЕМЕННЫЕ ===
-let map, cityMap; // Разные переменные для двух карт
+let map, cityMap;
 let userMarker;
-let isGuest = false; // Флаг гостя
-let currentLang = 'ru'; // Текущий язык
+let isGuest = false;
+let currentLang = 'ru';
+let selectedTariff = 'economy';
+let orderComment = '';
+let intercityRoute = null;
 
 // Словарь переводов
 const translations = {
@@ -36,14 +39,26 @@ const translations = {
 };
 
 // === АВТОРИЗАЦИЯ (AUTH) ===
-
-// Показываем экран входа при старте
 document.addEventListener("DOMContentLoaded", () => {
-    // По умолчанию показываем экран авторизации
     document.getElementById('auth-screen').style.display = 'flex';
+    
+    // Синхронизация языка в настройках
+    const v = document.getElementById('settings-lang-value');
+    if (v) v.innerText = (currentLang === 'ru') ? 'Русский' : 'Қазақша';
+    
+    // Рендер демо-постов
+    renderPosts();
+    
+    // Обработка выбора тарифа
+    document.querySelectorAll('.tariff').forEach(t => {
+        t.addEventListener('click', function() {
+            document.querySelectorAll('.tariff').forEach(x => x.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedTariff = this.dataset.tariff || 'economy';
+        });
+    });
 });
 
-// Логика отправки СМС
 function sendSms() {
     const phone = document.getElementById('auth-phone').value;
     const name = document.getElementById('auth-name').value;
@@ -58,12 +73,10 @@ function sendSms() {
     const smsBlock = document.getElementById('sms-block');
 
     if (smsBlock.style.display === 'none') {
-        // Шаг 1: Показать поле СМС
         smsBlock.style.display = 'block';
         btn.innerText = "Войти";
         if(tg) tg.showAlert(`Код отправлен на ${phone}`);
     } else {
-        // Шаг 2: Проверка кода (Имитация)
         completeLogin(name, phone);
     }
 }
@@ -72,11 +85,10 @@ function completeLogin(name, phone) {
     document.getElementById('auth-screen').style.display = 'none';
     isGuest = false;
     
-    // Обновляем данные в профиле
     document.getElementById('profile-name').innerText = name;
     document.getElementById('profile-phone').innerText = phone;
     
-    switchTab('home'); // Пускаем в приложение
+    switchTab('home');
 }
 
 function continueAsGuest() {
@@ -84,7 +96,6 @@ function continueAsGuest() {
     isGuest = true;
     document.getElementById('profile-name').innerText = "Гость";
     
-    // Гостям можно ТОЛЬКО в Ленту
     switchTab('feed');
     
     if(tg) tg.showAlert("Режим гостя: Доступна только Лента");
@@ -92,33 +103,25 @@ function continueAsGuest() {
 
 // === ГЛАВНАЯ НАВИГАЦИЯ ===
 function switchTab(tabId) {
-    // ПРОВЕРКА ГОСТЯ
     if (isGuest && tabId !== 'feed') {
-        // Если гость пытается уйти с ленты -> просим авторизацию
         document.getElementById('auth-screen').style.display = 'flex';
         return;
     }
 
-    // 1. Скрываем все экраны
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
     });
 
-    // 2. Убираем подсветку у кнопок
     document.querySelectorAll('.dock-item').forEach(item => {
         item.classList.remove('active');
     });
-    // Снимаем подсветку с кнопки AI отдельно
     document.querySelector('.ai-button').classList.remove('active');
 
-    // 3. Логика переключения
     const dockItems = document.querySelectorAll('.dock-item');
-    // dockItems[0] = City, [1] = Feed, [2] = Wallet, [3] = Driver
     
     if (tabId === 'city') {
         document.getElementById('city-view').classList.add('active');
         dockItems[0].classList.add('active');
-        // Инициализируем карту города, если открыта вкладка карты
         setTimeout(() => { if(cityMap) cityMap.invalidateSize(); }, 100);
     } 
     else if (tabId === 'feed') {
@@ -129,7 +132,6 @@ function switchTab(tabId) {
         document.getElementById('home-view').classList.add('active');
         document.querySelector('.ai-button').classList.add('active');
         
-        // Карта такси
         setTimeout(() => { 
             if(!map) initMap(); 
             else map.invalidateSize(); 
@@ -149,9 +151,7 @@ function switchTab(tabId) {
 
 // === РАЗДЕЛ ГОРОД (Вкладки) ===
 function switchCityTab(subTab) {
-    // Кнопки
     document.querySelectorAll('.c-tab').forEach(b => b.classList.remove('active'));
-    // Контент
     document.querySelectorAll('.city-content').forEach(c => c.classList.remove('active'));
 
     if (subTab === 'billboard') {
@@ -160,13 +160,26 @@ function switchCityTab(subTab) {
     } else {
         document.getElementById('tab-citymap').classList.add('active');
         document.querySelectorAll('.c-tab')[1].classList.add('active');
-        // Инициализация карты города
         setTimeout(() => initCityMap(), 100);
     }
 }
 
+// === ВОДИТЕЛЬ (Вкладки) ===
+function switchDriverTab(subTab) {
+    document.querySelectorAll('.d-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.driver-content').forEach(c => c.classList.remove('active'));
+
+    if (subTab === 'city') {
+        document.getElementById('driver-city-orders').classList.add('active');
+        document.querySelectorAll('.d-tab')[0].classList.add('active');
+    } else {
+        document.getElementById('driver-intercity-orders').classList.add('active');
+        document.querySelectorAll('.d-tab')[1].classList.add('active');
+    }
+}
+
 // === КАРТЫ (LEAFLET) ===
-function initMap() { // Карта такси
+function initMap() {
     const mapDiv = document.getElementById('map-container');
     if(mapDiv && !map) {
         map = L.map('map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
@@ -177,15 +190,14 @@ function initMap() { // Карта такси
     }
 }
 
-function initCityMap() { // Карта города (заведения)
+function initCityMap() {
     const mapDiv = document.getElementById('city-map-container');
     if(mapDiv && !cityMap) {
         cityMap = L.map('city-map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { // Светлая для города
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '', maxZoom: 19
         }).addTo(cityMap);
         
-        // Пример меток
         L.marker([49.805, 73.09]).addTo(cityMap).bindPopup("Кинотеатр Ленина");
         L.marker([49.81, 73.11]).addTo(cityMap).bindPopup("Сити Молл");
     }
@@ -194,14 +206,14 @@ function initCityMap() { // Карта города (заведения)
 function centerMap() {
     if(!map) { initMap(); return; }
     map.locate({setView: true, maxZoom: 14});
-    map.on('locationfound', (e) => {
+    
+    map.once('locationfound', (e) => {
         if(userMarker) map.removeLayer(userMarker);
         userMarker = L.marker(e.latlng).addTo(map);
     });
 }
 
 // === ЧАТ И AI ===
-// Обработка кнопки внутри инпута
 const chatInp = document.getElementById('chatInput');
 if(chatInp) {
     chatInp.addEventListener('keypress', (e) => {
@@ -244,8 +256,77 @@ function aiReply(text) {
     if(lower.includes("привет")) reply = "Салем! Куда поедем?";
     else if(lower.includes("розовое")) reply = "Включил тариф Lady. Женщина водитель скоро приедет.";
     else if(lower.includes("кафе")) reply = "Показываю лучшие кафе на карте города.";
+    else if(lower.includes("межгород")) reply = "Открываю настройки межгорода. Выберите маршрут!";
     
     addMessageBubble(reply, 'ai');
+}
+
+// === ЗАКАЗ ТАКСИ ===
+function startOrder() {
+    const to = document.getElementById('order-to').value.trim();
+    
+    if (!to && !intercityRoute) {
+        if(tg) tg.showAlert("Укажите точку назначения или выберите межгород");
+        else alert("Укажите точку назначения");
+        return;
+    }
+
+    const tariffNames = {
+        economy: 'Эконом',
+        comfort: 'Комфорт',
+        business: 'Бизнес',
+        lady: 'Lady 🌸'
+    };
+
+    let orderText = `Заказ создан!\n\nТариф: ${tariffNames[selectedTariff] || 'Эконом'}`;
+    
+    if (intercityRoute) {
+        orderText += `\nМаршрут: ${intercityRoute.from} → ${intercityRoute.to}`;
+        orderText += `\nМест: ${intercityRoute.seats}`;
+    } else {
+        orderText += `\nКуда: ${to}`;
+    }
+    
+    if (orderComment) {
+        orderText += `\nКомментарий: ${orderComment}`;
+    }
+
+    if(tg) tg.showAlert(orderText);
+    else alert(orderText);
+}
+
+function saveComment() {
+    const input = document.getElementById('comment-input');
+    orderComment = input.value.trim();
+    
+    const display = document.getElementById('comment-display');
+    if (display) {
+        display.innerText = orderComment || 'Указать...';
+    }
+    
+    closeModal('comment-modal');
+}
+
+function saveIntercity() {
+    const from = document.getElementById('intercity-from').value;
+    const to = document.getElementById('intercity-to').value;
+    const seats = document.getElementById('intercity-seats').value;
+    
+    if (from === to) {
+        if(tg) tg.showAlert("Выберите разные города");
+        else alert("Выберите разные города");
+        return;
+    }
+    
+    intercityRoute = { from, to, seats };
+    
+    const display = document.getElementById('intercity-display');
+    if (display) {
+        display.innerText = `${from} → ${to}`;
+    }
+    
+    closeModal('intercity-modal');
+    if(tg) tg.showAlert(`Межгород: ${from} → ${to}, мест: ${seats}`);
 }
 
 // === КОШЕЛЕК И МОДАЛКИ ===
@@ -272,22 +353,186 @@ function openWalletModal(type) {
 }
 
 // === ЛЕНТА (THREADS) ===
+const POSTS_KEY = 'aitax_posts_v1';
+
+function openCreatePostModal() {
+    openModal('create-post-modal');
+    const ta = document.getElementById('create-post-text');
+    const imgInput = document.getElementById('create-post-image');
+    const preview = document.getElementById('create-post-preview');
+
+    if (ta) ta.value = '';
+    if (imgInput) imgInput.value = '';
+    if (preview) { preview.innerHTML = ''; preview.classList.add('hidden'); }
+
+    setTimeout(() => ta?.focus(), 50);
+}
+
+function closeCreatePost() {
+    closeModal('create-post-modal');
+}
+
+function getProfileAvatarDataUrlOrNull() {
+    const el = document.querySelector('#sidebar-avatar img');
+    return el?.getAttribute('src') || null;
+}
+
+function getCurrentAuthor() {
+    const name = document.getElementById('profile-name')?.innerText?.trim() || 'Гость';
+    return { name, avatar: getProfileAvatarDataUrlOrNull() };
+}
+
+function loadPosts() {
+    try { return JSON.parse(localStorage.getItem(POSTS_KEY) || '[]'); }
+    catch { return []; }
+}
+
+function savePosts(posts) {
+    localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
+}
+
+function renderPosts() {
+    const stream = document.querySelector('.feed-stream');
+    if (!stream) return;
+
+    const staticCards = Array.from(stream.querySelectorAll('.post-card[data-static="1"]'));
+    if (staticCards.length === 0) {
+        stream.querySelectorAll('.post-card').forEach(c => c.dataset.static = "1");
+    }
+
+    stream.querySelectorAll('.post-card[data-demo="1"]').forEach(n => n.remove());
+
+    const posts = loadPosts();
+    posts.slice().reverse().forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'post-card';
+        card.dataset.demo = "1";
+        card.dataset.postId = p.id;
+
+        const avatarHtml = p.author.avatar
+            ? `<div class="avatar-circle" style="width:36px;height:36px;overflow:hidden;">
+                 <img src="${p.author.avatar}" style="width:100%;height:100%;object-fit:cover;">
+               </div>`
+            : `<div class="avatar-circle" style="width:36px; height:36px;">${(p.author.name || 'U')[0]}</div>`;
+
+        const imgHtml = p.image
+            ? `<div style="margin-top:12px;">
+                 <img src="${p.image}" style="width:100%;max-height:320px;object-fit:cover;border-radius:18px;border:1px solid var(--border);">
+               </div>`
+            : '';
+
+        card.innerHTML = `
+            <div class="post-head">
+                ${avatarHtml}
+                <div style="flex:1; margin-left:10px;">
+                    <div class="name-row">
+                        <span class="name">${escapeHtml(p.author.name)}</span>
+                    </div>
+                </div>
+                <div class="time">только что</div>
+                <button class="more-btn"><ion-icon name="ellipsis-horizontal"></ion-icon></button>
+            </div>
+
+            <div class="post-content">${escapeHtml(p.text)}</div>
+            ${imgHtml}
+
+            <div class="post-actions-bar">
+                <button class="act-btn" onclick="toggleLike('${p.id}')"><ion-icon name="${p.liked ? 'heart' : 'heart-outline'}"></ion-icon></button>
+                <button class="act-btn" onclick="openComments('${p.id}')"><ion-icon name="chatbubble-outline"></ion-icon></button>
+                <button class="act-btn" onclick="repost('${p.id}')"><ion-icon name="repeat-outline"></ion-icon></button>
+                <button class="act-btn" onclick="sharePost('${p.id}')"><ion-icon name="paper-plane-outline"></ion-icon></button>
+            </div>
+            <div class="likes-count">${p.likes || 0} лайков</div>
+        `;
+
+        stream.prepend(card);
+    });
+}
+
+function submitPost() {
+    const textEl = document.getElementById('create-post-text');
+    const imgInput = document.getElementById('create-post-image');
+    const text = textEl?.value?.trim() || '';
+    if (!text && !imgInput?.files?.length) {
+        if (tg) tg.showAlert("Напишите текст или прикрепите фото");
+        else alert("Напишите текст или прикрепите фото");
+        return;
+    }
+
+    const author = getCurrentAuthor();
+    const post = {
+        id: String(Date.now()),
+        author,
+        text,
+        image: null,
+        likes: 0,
+        liked: false,
+        createdAt: Date.now()
+    };
+
+    const finalize = () => {
+        const posts = loadPosts();
+        posts.push(post);
+        savePosts(posts);
+        closeCreatePost();
+        renderPosts();
+        if (tg) tg.HapticFeedback.impactOccurred('medium');
+    };
+
+    if (imgInput?.files?.[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => { post.image = e.target.result; finalize(); };
+        reader.readAsDataURL(imgInput.files[0]);
+    } else {
+        finalize();
+    }
+}
+
+function toggleLike(postId) {
+    const posts = loadPosts();
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    p.liked = !p.liked;
+    p.likes = Math.max(0, (p.likes || 0) + (p.liked ? 1 : -1));
+    savePosts(posts);
+    renderPosts();
+}
+
+function repost(postId) {
+    if (tg) tg.showAlert("Репост (Demo): скоро добавим выбор «в ленту / в чат города»");
+    else alert("Репост (Demo)");
+}
+
 function sharePost(id) {
-    // Имитация шаринга -> открывает создание поста (как в ТЗ)
-    if(tg) tg.HapticFeedback.impactOccurred('medium');
-    // По ТЗ: "карточка для нового поста должна открывать по кнопке-панель Поделиться"
-    // Но обычно Поделиться = Share, а Создать = Create.
-    // Реализуем логику: кнопка Share открывает нативный выбор или ссылку
-    
-    // Но если задача "По кнопке поделиться... открывать панель", то вот:
-    const composer = document.querySelector('.feed-composer textarea');
-    composer.focus();
-    composer.scrollIntoView({behavior: "smooth"});
+    openCreatePostModal();
 }
 
 function openComments(postId) {
     openModal('thread-view-modal');
 }
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (m) => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[m]));
+}
+
+// Превью картинки в модалке
+document.addEventListener('change', (e) => {
+    if (e.target?.id !== 'create-post-image') return;
+    const file = e.target.files?.[0];
+    const preview = document.getElementById('create-post-preview');
+    if (!preview) return;
+
+    if (!file) { preview.innerHTML = ''; preview.classList.add('hidden'); return; }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        preview.innerHTML = `<img src="${ev.target.result}">`;
+        preview.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+});
 
 // === ВОДИТЕЛЬ (ТОРГ) ===
 function openOrderNegotiation(id) {
@@ -316,21 +561,33 @@ function toggleLanguage() {
     currentLang = currentLang === 'ru' ? 'kz' : 'ru';
     document.getElementById('lang-label').innerText = `Язык: ${currentLang === 'ru' ? 'Русский' : 'Қазақша'}`;
     
-    // Применяем переводы (Демо)
-    // В реальном проекте тут нужно пройтись по всем data-i18n атрибутам
+    const v = document.getElementById('settings-lang-value');
+    if (v) v.innerText = (currentLang === 'ru') ? 'Русский' : 'Қазақша';
+    
     if(tg) tg.showAlert(`Язык изменен на ${currentLang.toUpperCase()}`);
 }
 
 function toggleTheme() {
-    // Демо смены темы
     const body = document.body;
-    if (body.style.getPropertyValue('--bg-gradient').includes('1a1a1a')) {
-         // Светлая/Цветная тема
-         body.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #2b0042, #4c0045)');
+    const bg = document.getElementById('background-layer');
+    
+    if (bg.style.background.includes('1c1c1e')) {
+        bg.style.background = 'radial-gradient(circle at 50% 30%, #2b0042, #0000 90%)';
     } else {
-        // Дефолтная тема
-        body.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)');
+        bg.style.background = 'radial-gradient(circle at 50% 30%, #1c1c1e, #0000 90%)';
     }
+    
+    if(tg) tg.showAlert("Тема изменена");
+}
+
+function logoutDemo() {
+    isGuest = true;
+    document.getElementById('profile-name').innerText = "Гость";
+    document.getElementById('profile-phone').innerText = "+7 ...";
+    document.getElementById('sidebar-avatar').innerHTML = `<ion-icon name="person"></ion-icon>`;
+    closeModal('settings-modal');
+    switchTab('feed');
+    if (tg) tg.showAlert("Вы вышли (Demo)");
 }
 
 // Загрузка аватарки
@@ -342,7 +599,6 @@ if(avatarInput) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imgUrl = e.target.result;
-                // Обновляем аватарки в меню и в ленте
                 document.getElementById('sidebar-avatar').innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
             }
             reader.readAsDataURL(file);
@@ -355,9 +611,10 @@ function openModal(id) {
     const m = document.getElementById(id);
     if(m) { 
         m.classList.remove('hidden'); 
-        setTimeout(() => m.classList.add('active'), 10); // Hack for transition
+        setTimeout(() => m.classList.add('active'), 10);
     }
 }
+
 function closeModal(id) {
     const m = document.getElementById(id);
     if(m) { 
