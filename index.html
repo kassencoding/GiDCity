@@ -2,450 +2,274 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Aitax SuperApp</title> 
-    <link rel="stylesheet" href="style.css">
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aitax Mini App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style (3).css">
 </head>
 <body>
-
     <div id="background-layer"></div>
-    <div class="cyber-grid"></div>
-
-    <div id="auth-screen" class="auth-overlay" style="display:none;">
-        <div class="auth-card">
-            <h1>Aitax ID</h1>
-            <p>Войдите, чтобы пользоваться всеми функциями</p>
-            <div class="input-group-auth">
-                <input type="text" placeholder="ФИО" id="auth-name">
-                <input type="tel" placeholder="+7 (___) ___-__-__" id="auth-phone">
-                <div class="sms-group" style="display:none;" id="sms-block">
-                    <input type="number" placeholder="Код из СМС" id="auth-code">
-                </div>
+    
+    <!-- Header: Опущен чуть ниже для кнопок TG -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="city-selector">
+                <span id="current-city">Karaganda</span> • <span id="current-temp">-2°C</span> ❄️
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </div>
-            <button class="btn-full" onclick="sendSms()" id="btn-login-action">Получить код</button>
-            <div class="guest-link" onclick="continueAsGuest()">Продолжить как гость (Только лента)</div>
+            <h1 class="brand-logo">Aitax</h1>
         </div>
-    </div>
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+    </header>
 
-    <div class="top-bar">
-        <div class="status-row" style="display:flex; justify-content:center; gap:5px; align-items:center; margin-bottom:10px;">
-            <span>Karaganda</span> • <span>-2°C ❄️</span>
-            <ion-icon name="chevron-down-outline"></ion-icon>
-        </div>
-
-        <div class="brand-row">
-            <div class="logo" style="margin-left: 0; margin-right: auto;">Aitax</div>
-            <div class="btn-icon" onclick="toggleSidebar()"><ion-icon name="menu-outline"></ion-icon></div>
-        </div>
-    </div>
-
-    <div class="sidebar" id="sidebar">
-        <div class="m-head">
-            <h3>Профиль</h3>
-            <button class="close-m" onclick="toggleSidebar()"><ion-icon name="close"></ion-icon></button>
-        </div>
-        
-        <div class="profile-edit-section">
-            <div class="avatar-upload">
-                <div class="current-avatar" id="sidebar-avatar"><ion-icon name="person"></ion-icon></div>
-                <label for="avatar-input" class="edit-icon"><ion-icon name="camera"></ion-icon></label>
-                <input type="file" id="avatar-input" hidden accept="image/*">
+    <main id="main-content">
+        <!-- Вкладка 1: Афиша и Карта -->
+        <section id="tab-events" class="tab-content active">
+            <div class="sub-nav">
+                <button class="sub-nav-btn active" onclick="switchSubTab('afisha')">Афиша</button>
+                <button class="sub-nav-btn" onclick="switchSubTab('map')">Карта</button>
             </div>
-            <div class="profile-info">
-                <div class="p-name" id="profile-name">Гость</div>
-                <div class="p-phone" id="profile-phone">+7 ...</div>
-            </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="set-item" onclick="toggleLanguage()">
-            <ion-icon name="language-outline"></ion-icon> 
-            <span id="lang-label">Язык: Русский</span>
-        </div>
-        <div class="set-item" onclick="toggleTheme()">
-            <ion-icon name="color-palette-outline"></ion-icon> 
-            Темы (Градиент)
-        </div>
-        <div class="set-item" onclick="openModal('settings-modal')">
-            <ion-icon name="settings-outline"></ion-icon> 
-            Настройки
-        </div>
-    </div>
-
-    <div id="city-view" class="view custom-scroll">
-        <div class="city-tabs-header">
-            <button class="c-tab active" onclick="switchCityTab('billboard')">Афиша</button>
-            <button class="c-tab" onclick="switchCityTab('map')">Карта</button>
-        </div>
-
-        <div id="tab-billboard" class="city-content active">
-            <div class="ad-feed">
-                <div class="ad-card premium">
-                    <div class="ad-badge">Promoted</div>
-                    <img src="https://placehold.co/600x300/1a1a1a/FFF?text=Concert+Show" class="ad-img">
-                    <div class="ad-info">
-                    <h3>Грандиозный концерт</h3>
-                    <p>Скидки 50% на билеты только сегодня!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-citymap" class="city-content">
-            <div id="city-map-container" style="width:100%; height:100%; min-height: 500px;"></div>
-        </div>
-    </div>
-
-    <div id="home-view" class="view home-view active">
-        <div id="map-container"></div>
-        
-        <div class="map-overlays">
-            <div class="map-btn-locate" onclick="centerMap()"><ion-icon name="locate"></ion-icon></div>
-        </div>
-
-        <div class="chat-container"></div>
-
-        <div class="order-panel">
-            <div class="panel-handle"></div>
-
-            <div class="chat-input-row">
-                <div class="input-wrapper improved">
-                    <input type="text" placeholder="AI чат или адрес..." id="chatInput">
-                    <button class="btn-send-inside" onclick="sendMessage()">
-                    <ion-icon name="arrow-up"></ion-icon>
-                    </button>
-                </div>
-            </div>
-
-            <div class="address-block">
-                <div class="input-line">
-                    <ion-icon name="navigate" style="color:var(--accent)"></ion-icon>
-                    <div class="addr-text">
-                    <div class="lbl">Откуда</div>
-                    <div class="val" id="order-from">Мое местоположение</div>
-                    </div>
-                </div>
-                <div class="divider-h"></div>
-                <div class="input-line">
-                    <ion-icon name="location" style="color:#ff4757"></ion-icon>
-                    <div class="addr-text">
-                    <div class="lbl">Куда</div>
-                    <input type="text" class="clean-addr-inp" id="order-to" placeholder="Укажите точку Б">
-                    </div>
-                </div>
-            </div>
-
-            <div class="options-row">
-                <div class="opt-box" onclick="openModal('comment-modal')">
-                    <div class="lbl">Комментарий</div>
-                    <div id="comment-display">Указать...</div>
-                </div>
-                <div class="opt-box" onclick="openModal('intercity-modal')">
-                    <div class="lbl">Межгород</div>
-                    <div id="intercity-display">Выбрать</div>
-                </div>
-            </div>
-
-            <div class="tariffs-row custom-scroll-x">
-                <div class="tariff selected" data-tariff="economy">Эконом</div>
-                <div class="tariff" data-tariff="comfort">Комфорт</div>
-                <div class="tariff" data-tariff="business">Бизнес</div>
-                <div class="tariff pink-taxi" data-tariff="lady" style="color:#ff69b4; border-color:#ff69b4;">Lady 🌸</div>
-            </div>
-
-            <button class="btn-go" onclick="startOrder()">Поехали</button>
-        </div>
-    </div>
-
-    <div id="feed-view" class="view custom-scroll">
-        <div class="feed-composer">
-            <div class="composer-top">
-                <div class="avatar-circle"><ion-icon name="person"></ion-icon></div>
-                <div class="composer-placeholder" onclick="openCreatePostModal()">Что нового?</div>
-            </div>
-        </div>
-        
-        <div class="feed-stream">
-            <div class="post-card" data-static="1">
-                <div class="post-head">
-                    <div class="avatar-circle" style="width:36px; height:36px;">A</div>
-                    <div style="flex:1; margin-left:10px;">
-                    <div class="name-row">
-                    <span class="name">Admin</span>
-                    <span class="verified"><ion-icon name="checkmark-circle"></ion-icon></span>
-                    </div>
-                    </div>
-                    <div class="time">2ч</div>
-                    <button class="more-btn"><ion-icon name="ellipsis-horizontal"></ion-icon></button>
-                </div>
-                
-                <div class="post-content">
-                    Добро пожаловать в Aitax! Здесь можно общаться, как в Threads. 🚀
-                </div>
-                
-                <div class="post-actions-bar">
-                    <button class="act-btn"><ion-icon name="heart-outline"></ion-icon></button>
-                    <button class="act-btn" onclick="openComments(1)"><ion-icon name="chatbubble-outline"></ion-icon></button>
-                    <button class="act-btn"><ion-icon name="repeat-outline"></ion-icon></button>
-                    <button class="act-btn" onclick="sharePost(1)"><ion-icon name="paper-plane-outline"></ion-icon></button>
-                </div>
-                <div class="likes-count">12 лайков</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="wallet-view" class="view custom-scroll">
-        <div class="wallet-card">
-            <div style="color:rgba(255,255,255,0.7); font-size:13px;">Баланс</div>
-            <div class="w-amount">42 500 ₸</div>
             
-            <div class="w-actions">
-                <button onclick="openWalletModal('deposit')">
-                    <div class="icon-circle"><ion-icon name="add"></ion-icon></div>
-                    <span>Пополнить</span>
-                </button>
-                <button onclick="openWalletModal('transfer')">
-                    <div class="icon-circle"><ion-icon name="arrow-forward"></ion-icon></div>
-                    <span>Перевести</span>
-                </button>
-                <button onclick="openWalletModal('qr')">
-                    <div class="icon-circle"><ion-icon name="qr-code"></ion-icon></div>
-                    <span>QR</span>
+            <div id="afisha-view" class="sub-view active">
+                <div class="promo-slider" id="promo-container">
+                    <!-- Карточки добавятся через JS -->
+                </div>
+            </div>
+            
+            <div id="map-view" class="sub-view">
+                <div id="map"></div>
+            </div>
+        </section>
+
+        <!-- Вкладка 2: Чат города -->
+        <section id="tab-feed" class="tab-content">
+            <div class="feed-composer-panel" onclick="openCreatePostModal()">
+                <div class="user-avatar-mini"></div>
+                <span class="placeholder-text">Что нового?</span>
+            </div>
+            <div class="feed-container" id="posts-feed">
+                <!-- Посты -->
+            </div>
+        </section>
+
+        <!-- Вкладка 3: ИИ и Такси (Пусто, так как управление через модалку Ai) -->
+        <section id="tab-ai" class="tab-content">
+            <div class="ai-placeholder">
+                <p>Нажмите на синюю кнопку <b>Ai</b> внизу для заказа</p>
+            </div>
+        </section>
+
+        <!-- Вкладка 4: Кошелек -->
+        <section id="tab-wallet" class="tab-content">
+            <div class="wallet-card">
+                <span class="label">Баланс</span>
+                <h2 class="balance-amount">42 500 ₸</h2>
+                <div class="wallet-actions">
+                    <button class="w-btn"><div class="w-icon">+</div>Пополнить</button>
+                    <button class="w-btn"><div class="w-icon">→</div>Перевести</button>
+                    <button class="w-btn"><div class="w-icon">∷</div>QR</button>
+                </div>
+                <p class="wallet-promo">⚡ Пополняйте счет и катайтесь со скидкой!</p>
+            </div>
+            <h3 class="section-title">История транзакций</h3>
+            <div class="empty-state">История пуста</div>
+        </section>
+
+        <!-- Вкладка 5: Кабинет водителя -->
+        <section id="tab-driver" class="tab-content">
+            <div class="driver-tabs-header">
+                <button class="d-tab active" onclick="switchDriverTab('city')">Город</button>
+                <button class="d-tab" onclick="switchDriverTab('intercity')">Межгород</button>
+            </div>
+            
+            <div id="driver-city" class="driver-content active">
+                <h3 class="section-title">Эфир заказов (Город)</h3>
+                <div id="city-orders-list">
+                    <div class="empty-state">Нет активных заказов в городе</div>
+                </div>
+            </div>
+            
+            <div id="driver-intercity" class="driver-content">
+                <h3 class="section-title">Эфир заказов (Межгород)</h3>
+                <div id="intercity-orders-list">
+                    <!-- Сюда будут падать заказы -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Dockbar -->
+    <nav class="dockbar">
+        <button class="dock-item active" onclick="switchTab('events', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </button>
+        <button class="dock-item" onclick="switchTab('feed', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </button>
+        <div class="dock-ai-container">
+            <button class="ai-main-btn" onclick="toggleAiModal()">Ai</button>
+        </div>
+        <button class="dock-item" onclick="switchTab('wallet', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </button>
+        <button class="dock-item" onclick="switchTab('driver', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </button>
+    </nav>
+
+    <!-- Модалка AI и Такси -->
+    <div id="ai-modal" class="modal-overlay">
+        <div class="modal-sheet ai-sheet">
+            <div class="sheet-handle"></div>
+            <div class="ai-chat-container" id="ai-chat-box">
+                <!-- Диалог с ИИ -->
+            </div>
+            <div class="ai-input-wrapper">
+                <input type="text" id="ai-input" placeholder="AI чат или адрес..." onkeypress="handleAiInput(event)">
+                <button class="ai-send-btn" onclick="sendAiMessage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
             </div>
             
-            <div class="bonus-note">
-                ⚡️ Пополняйте счет и катайтесь со скидкой! Оплата через QR выгоднее.
-            </div>
-        </div>
-
-        <div class="section-title">История транзакций</div>
-        <div class="history-list">
-            </div>
-    </div>
-
-    <div id="driver-view" class="view custom-scroll">
-        <div class="driver-block">
-            <div class="driver-avatar-icon"><ion-icon name="person"></ion-icon></div>
-            <div class="driver-name">Водитель</div>
-            <div class="car-details">Ожидание заказов...</div>
-        </div>
-        
-        <div class="driver-tabs-header">
-            <button class="d-tab active" onclick="switchDriverTab('city')">Город</button>
-            <button class="d-tab" onclick="switchDriverTab('intercity')">Межгород</button>
-        </div>
-
-        <div id="driver-city-orders" class="driver-content active">
-            <div class="section-title">Эфир заказов (Город)</div>
-            <div class="orders-list">
-                <div class="order-strip">
-                    <div class="route-info">
-                        <div style="font-weight:700;">Центр → Юго-Восток</div>
-                        <div style="font-size:12px; color:gray; margin-top:4px;">Эконом • 5.2 км</div>
+            <div class="taxi-options-grid">
+                <div class="address-row">
+                    <div class="addr-dot from"></div>
+                    <div class="addr-text">Мое местоположение</div>
+                </div>
+                <div class="address-row">
+                    <div class="addr-dot to"></div>
+                    <input type="text" id="order-to" class="addr-input" placeholder="Укажите точку Б">
+                </div>
+                
+                <div class="extra-options">
+                    <div class="opt-box" onclick="openModal('comment-modal')">
+                        <span class="opt-label">Комментарий</span>
+                        <span class="opt-val" id="comment-display">Указать...</span>
                     </div>
-                    <div style="text-align:right;">
-                        <div class="price-tag">1800 ₸</div>
-                        <button class="take-btn-big" onclick="openOrderNegotiation(1)">Взять</button>
+                    <div class="opt-box" onclick="openModal('intercity-modal')">
+                        <span class="opt-label">Межгород</span>
+                        <span class="opt-val" id="intercity-display">Выбрать...</span>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div id="driver-intercity-orders" class="driver-content">
-            <div class="section-title">Эфир заказов (Межгород)</div>
-            <div class="orders-list">
-                <div class="order-strip intercity-order">
-                    <div class="route-info">
-                        <div style="font-weight:700;">Караганда → Астана</div>
-                        <div style="font-size:12px; color:gray; margin-top:4px;">Комфорт • 210 км • 3 места</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="price-tag">25 000 ₸</div>
-                        <button class="take-btn-big" onclick="openOrderNegotiation(2)">Взять</button>
-                    </div>
+                <div class="tariffs-scroll">
+                    <button class="tariff-btn active" data-tariff="Эконом">Эконом</button>
+                    <button class="tariff-btn" data-tariff="Комфорт">Комфорт</button>
+                    <button class="tariff-btn" data-tariff="Бизнес">Бизнес</button>
+                    <button class="tariff-btn lady" data-tariff="Lady">Lady</button>
                 </div>
-                <div class="order-strip intercity-order">
-                    <div class="route-info">
-                        <div style="font-weight:700;">Караганда → Алматы</div>
-                        <div style="font-size:12px; color:gray; margin-top:4px;">Бизнес • 650 км • 2 места</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="price-tag">60 000 ₸</div>
-                        <button class="take-btn-big" onclick="openOrderNegotiation(3)">Взять</button>
-                    </div>
-                </div>
+
+                <button class="order-confirm-btn" onclick="startOrder()">Поехали</button>
             </div>
         </div>
     </div>
 
-    <!-- МОДАЛКИ -->
-    <div class="modal-overlay hidden" id="comment-modal">
-        <div class="modal-card">
-            <div class="m-head">
-                <h3>Комментарий</h3>
-                <button class="close-m" onclick="closeModal('comment-modal')"><ion-icon name="close"></ion-icon></button>
-            </div>
-            <div class="input-group-modal">
-                <input type="text" class="modal-inp" id="comment-input" placeholder="Например: с ребенком, пустой багажник...">
-            </div>
-            <button class="btn-full" onclick="saveComment()">Сохранить</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay hidden" id="intercity-modal">
-        <div class="modal-card">
-            <div class="m-head">
+    <!-- Модалка Межгород -->
+    <div id="intercity-modal" class="modal-overlay">
+        <div class="modal-sheet">
+            <div class="modal-header">
                 <h3>Межгород</h3>
-                <button class="close-m" onclick="closeModal('intercity-modal')"><ion-icon name="close"></ion-icon></button>
+                <button class="close-modal" onclick="closeModal('intercity-modal')">✕</button>
             </div>
-            <div class="input-group-modal">
-                <label style="font-size:13px; color:var(--text-muted); margin-bottom:8px; display:block;">Откуда</label>
-                <select class="modal-inp" id="intercity-from">
-                    <option value="Караганда">Караганда</option>
-                    <option value="Темиртау">Темиртау</option>
-                    <option value="Астана">Астана</option>
-                    <option value="Алматы">Алматы</option>
-                    <option value="Балхаш">Балхаш</option>
-                    <option value="Шымкент">Шымкент</option>
-                </select>
-
-                <label style="font-size:13px; color:var(--text-muted); margin:16px 0 8px; display:block;">Куда</label>
-                <select class="modal-inp" id="intercity-to">
-                    <option value="Астана">Астана</option>
-                    <option value="Алматы">Алматы</option>
-                    <option value="Караганда">Караганда</option>
-                    <option value="Темиртау">Темиртау</option>
-                    <option value="Балхаш">Балхаш</option>
-                    <option value="Шымкент">Шымкент</option>
-                </select>
-
-                <label style="font-size:13px; color:var(--text-muted); margin:16px 0 8px; display:block;">Количество мест</label>
-                <input type="number" class="modal-inp" id="intercity-seats" value="1" min="1" max="4">
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Откуда</label>
+                    <select id="inter-from">
+                        <option>Караганда</option>
+                        <option>Астана</option>
+                        <option>Алматы</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Куда</label>
+                    <select id="inter-to">
+                        <option>Астана</option>
+                        <option>Караганда</option>
+                        <option>Алматы</option>
+                        <option>Павлодар</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Количество мест</label>
+                    <input type="number" id="inter-seats" value="1" min="1" max="8">
+                </div>
+                <div class="input-group">
+                    <label>Цена (₸)</label>
+                    <input type="number" id="inter-price" placeholder="Ваша цена">
+                </div>
+                <div class="input-group">
+                    <label>Комментарий</label>
+                    <input type="text" id="inter-comment" placeholder="Напр: багаж">
+                </div>
+                <button class="primary-btn" onclick="saveIntercity()">Подтвердить</button>
             </div>
-            <button class="btn-full" onclick="saveIntercity()">Сохранить</button>
         </div>
     </div>
 
-    <div class="modal-overlay hidden" id="settings-modal">
-        <div class="modal-card">
-            <div class="m-head">
+    <!-- Модалка Настройки -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-sheet">
+            <div class="modal-header">
                 <h3>Настройки</h3>
-                <button class="close-m" onclick="closeModal('settings-modal')"><ion-icon name="close"></ion-icon></button>
+                <button class="close-modal" onclick="closeModal('settings-modal')">✕</button>
             </div>
-
             <div class="settings-list">
-                <button class="settings-row" onclick="toggleLanguage()">
+                <div class="settings-row" onclick="toggleLanguage()">
                     <span>Язык</span>
-                    <span class="muted" id="settings-lang-value">Русский</span>
-                </button>
-
-                <button class="settings-row" onclick="toggleTheme()">
-                    <span>Тема</span>
-                    <span class="muted">Градиент</span>
-                </button>
-
-                <button class="settings-row" onclick="logoutDemo()">
-                    <span>Выйти</span>
-                    <span class="muted">Demo</span>
-                </button>
+                    <span class="val" id="lang-val">Русский</span>
+                </div>
+                <div class="settings-row"><span>Настройка профиля</span></div>
+                <div class="settings-row"><span>История заказов</span></div>
+                <div class="settings-row"><span>Способы оплаты</span></div>
+                <div class="settings-row"><span>Уведомления</span></div>
+                <div class="settings-row"><span>Безопасность</span></div>
+                <div class="settings-row"><span>Помощь ИИ</span></div>
             </div>
-
-            <button class="btn-full" onclick="closeModal('settings-modal')">Готово</button>
         </div>
     </div>
 
-    <div class="modal-overlay hidden" id="create-post-modal">
-        <div class="modal-card full-height">
-            <div class="m-head">
+    <!-- Модалка Создания Поста -->
+    <div id="create-post-modal" class="modal-overlay">
+        <div class="modal-sheet">
+            <div class="modal-header">
                 <h3>Новый пост</h3>
-                <button class="close-m" onclick="closeCreatePost()"><ion-icon name="close"></ion-icon></button>
+                <button class="close-modal" onclick="closeCreatePost()">✕</button>
             </div>
-
-            <textarea id="create-post-text" class="post-textarea" placeholder="Что нового?"></textarea>
-
-            <div class="post-attach-row">
-                <label class="attach-btn" for="create-post-image">
-                    <ion-icon name="image-outline"></ion-icon>
-                    <span>Фото</span>
-                </label>
-                <input type="file" id="create-post-image" hidden accept="image/*">
-            </div>
-
-            <div id="create-post-preview" class="post-preview hidden"></div>
-
-            <button class="btn-full" onclick="submitPost()">Опубликовать</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay hidden" id="order-negotiation-modal">
-        <div class="modal-card">
-            <div class="m-head">
-                <h3>Заказ #123</h3>
-                <button class="close-m" onclick="closeModal('order-negotiation-modal')"><ion-icon name="close"></ion-icon></button>
-            </div>
-            <div class="offer-price-display">1800 ₸</div>
-            <div class="offer-actions">
-                <button class="btn-outline" onclick="offerMyPrice()">Предложить свою</button>
-                <button class="btn-full" onclick="acceptPrice()">Согласиться</button>
+            <div class="post-body">
+                <textarea id="post-text" class="post-textarea" placeholder="Что нового?"></textarea>
+                <div id="post-preview-container" class="post-preview hidden"></div>
+                <div class="post-attach-row">
+                    <label class="attach-btn">
+                        <input type="file" id="post-image-input" accept="image/*" hidden>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        Фото
+                    </label>
+                </div>
+                <button class="primary-btn" onclick="submitPost()">Опубликовать</button>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay hidden" id="wallet-action-modal">
-        <div class="modal-card">
-            <div class="m-head">
-                <h3 id="wallet-modal-title">Операция</h3>
-                <button class="close-m" onclick="closeModal('wallet-action-modal')"><ion-icon name="close"></ion-icon></button>
-            </div>
-            <div class="qr-placeholder" id="qr-view" style="display:none; text-align:center;">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=AitaxPayment" style="border-radius:10px;">
-                <p>Сканируйте для оплаты</p>
-            </div>
-            <div id="wallet-inputs">
-                <input type="number" class="modal-inp" placeholder="Сумма" style="margin-bottom:10px;">
-                <button class="btn-full">Выполнить</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay hidden" id="thread-view-modal">
-        <div class="modal-card full-height">
-            <div class="m-head">
-                <h3>Обсуждение</h3>
-                <button class="close-m" onclick="closeModal('thread-view-modal')"><ion-icon name="close"></ion-icon></button>
-            </div>
-            <div class="thread-content custom-scroll">
-                <div class="comment-item">
-                    <b>User1:</b> Круто выглядит!
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="user-profile">
+                <div class="user-avatar"></div>
+                <div class="user-info">
+                    <span class="user-name">Пользователь</span>
+                    <span class="user-status">Demo Mode</span>
                 </div>
             </div>
-            <div class="comment-input-area">
-                <input type="text" placeholder="Ответить...">
-                <button>Отп.</button>
-            </div>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-item" onclick="openModal('settings-modal')">Настройки</div>
+            <div class="menu-item" onclick="logoutDemo()">Выйти</div>
         </div>
     </div>
 
-    <div class="dock-bar">
-        <button class="dock-item" onclick="switchTab('city')"><ion-icon name="map-outline"></ion-icon></button>
-        
-        <button class="dock-item" onclick="switchTab('feed')"><ion-icon name="people-outline"></ion-icon></button>
-        
-        <div class="ai-button-wrapper">
-            <div class="ai-button" onclick="switchTab('home')">Ai</div>
-        </div>
-        
-        <button class="dock-item" onclick="switchTab('wallet')"><ion-icon name="wallet-outline"></ion-icon></button>
-        
-        <button class="dock-item" onclick="switchTab('driver')"><ion-icon name="car-sport-outline"></ion-icon></button>
-    </div>
-
-    <script src="script.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script (3).js"></script>
 </body>
 </html>
