@@ -1,624 +1,212 @@
-// === TELEGRAM WEB APP ===
-const tg = window.Telegram?.WebApp;
-if (tg) { 
-    tg.ready(); 
-    tg.expand(); 
-    tg.setHeaderColor('#0000'); 
-    tg.enableClosingConfirmation(); 
-}
-
-// === ПЕРЕМЕННЫЕ ===
-let map, cityMap;
+let map;
 let userMarker;
-let isGuest = false;
-let currentLang = 'ru';
-let selectedTariff = 'economy';
-let orderComment = '';
-let intercityRoute = null;
+let selectedTariff = 'Эконом';
+let intercityData = null;
 
-// Словарь переводов
-const translations = {
-    ru: {
-        tab_city: "Город",
-        tab_feed: "Лента",
-        tab_wallet: "Кошелек",
-        tab_driver: "Водитель",
-        btn_go: "Поехали",
-        auth_title: "Aitax ID",
-        guest_link: "Продолжить как гость"
-    },
-    kz: {
-        tab_city: "Қала",
-        tab_feed: "Желі",
-        tab_wallet: "Әмиян",
-        tab_driver: "Жүргізуші",
-        btn_go: "Кеттік",
-        auth_title: "Aitax ID",
-        guest_link: "Қонақ ретінде кіру"
-    }
-};
-
-// === АВТОРИЗАЦИЯ (AUTH) ===
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('auth-screen').style.display = 'flex';
-    
-    // Синхронизация языка в настройках
-    const v = document.getElementById('settings-lang-value');
-    if (v) v.innerText = (currentLang === 'ru') ? 'Русский' : 'Қазақша';
-    
-    // Рендер демо-постов
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    renderPromoCards();
     renderPosts();
     
-    // Обработка выбора тарифа
-    document.querySelectorAll('.tariff').forEach(t => {
-        t.addEventListener('click', function() {
-            document.querySelectorAll('.tariff').forEach(x => x.classList.remove('selected'));
-            this.classList.add('selected');
-            selectedTariff = this.dataset.tariff || 'economy';
+    // Тарифы
+    document.querySelectorAll('.tariff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tariff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedTariff = btn.dataset.tariff;
         });
     });
+
+    // Превью фото
+    const imgInput = document.getElementById('post-image-input');
+    if(imgInput) {
+        imgInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const container = document.getElementById('post-preview-container');
+                    container.innerHTML = `<img src="${e.target.result}" style="width:100%; border-radius:12px; margin-bottom:10px;">`;
+                    container.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 });
 
-function sendSms() {
-    const phone = document.getElementById('auth-phone').value;
-    const name = document.getElementById('auth-name').value;
+// --- Навигация ---
+function switchTab(tabId, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dock-item').forEach(d => d.classList.remove('active'));
     
-    if (phone.length < 10 || name.length < 2) {
-        if(tg) tg.showAlert("Введите имя и номер!");
-        else alert("Введите имя и номер!");
-        return;
-    }
-
-    const btn = document.getElementById('btn-login-action');
-    const smsBlock = document.getElementById('sms-block');
-
-    if (smsBlock.style.display === 'none') {
-        smsBlock.style.display = 'block';
-        btn.innerText = "Войти";
-        if(tg) tg.showAlert(`Код отправлен на ${phone}`);
-    } else {
-        completeLogin(name, phone);
+    document.getElementById('tab-' + tabId).classList.add('active');
+    el.classList.add('active');
+    
+    if(tabId === 'events') {
+        setTimeout(() => map.invalidateSize(), 200);
     }
 }
 
-function completeLogin(name, phone) {
-    document.getElementById('auth-screen').style.display = 'none';
-    isGuest = false;
+function switchSubTab(view) {
+    document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.sub-nav-btn').forEach(b => b.classList.remove('active'));
     
-    document.getElementById('profile-name').innerText = name;
-    document.getElementById('profile-phone').innerText = phone;
+    document.getElementById(view + '-view').classList.add('active');
+    event.target.classList.add('active');
     
-    switchTab('home');
-}
-
-function continueAsGuest() {
-    document.getElementById('auth-screen').style.display = 'none';
-    isGuest = true;
-    document.getElementById('profile-name').innerText = "Гость";
-    
-    switchTab('feed');
-    
-    if(tg) tg.showAlert("Режим гостя: Доступна только Лента");
-}
-
-// === ГЛАВНАЯ НАВИГАЦИЯ ===
-function switchTab(tabId) {
-    if (isGuest && tabId !== 'feed') {
-        document.getElementById('auth-screen').style.display = 'flex';
-        return;
-    }
-
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-    });
-
-    document.querySelectorAll('.dock-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.querySelector('.ai-button').classList.remove('active');
-
-    const dockItems = document.querySelectorAll('.dock-item');
-    
-    if (tabId === 'city') {
-        document.getElementById('city-view').classList.add('active');
-        dockItems[0].classList.add('active');
-        setTimeout(() => { if(cityMap) cityMap.invalidateSize(); }, 100);
-    } 
-    else if (tabId === 'feed') {
-        document.getElementById('feed-view').classList.add('active');
-        dockItems[1].classList.add('active');
-    } 
-    else if (tabId === 'home') {
-        document.getElementById('home-view').classList.add('active');
-        document.querySelector('.ai-button').classList.add('active');
-        
-        setTimeout(() => { 
-            if(!map) initMap(); 
-            else map.invalidateSize(); 
-        }, 100);
-    } 
-    else if (tabId === 'wallet') {
-        document.getElementById('wallet-view').classList.add('active');
-        dockItems[2].classList.add('active');
-    } 
-    else if (tabId === 'driver') {
-        document.getElementById('driver-view').classList.add('active');
-        dockItems[3].classList.add('active');
-    }
-
-    if(tg) tg.HapticFeedback.selectionChanged();
-}
-
-// === РАЗДЕЛ ГОРОД (Вкладки) ===
-function switchCityTab(subTab) {
-    document.querySelectorAll('.c-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.city-content').forEach(c => c.classList.remove('active'));
-
-    if (subTab === 'billboard') {
-        document.getElementById('tab-billboard').classList.add('active');
-        document.querySelectorAll('.c-tab')[0].classList.add('active');
-    } else {
-        document.getElementById('tab-citymap').classList.add('active');
-        document.querySelectorAll('.c-tab')[1].classList.add('active');
-        setTimeout(() => initCityMap(), 100);
+    if(view === 'map') {
+        setTimeout(() => map.invalidateSize(), 200);
     }
 }
 
-// === ВОДИТЕЛЬ (Вкладки) ===
-function switchDriverTab(subTab) {
-    document.querySelectorAll('.d-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.driver-content').forEach(c => c.classList.remove('active'));
-
-    if (subTab === 'city') {
-        document.getElementById('driver-city-orders').classList.add('active');
-        document.querySelectorAll('.d-tab')[0].classList.add('active');
-    } else {
-        document.getElementById('driver-intercity-orders').classList.add('active');
-        document.querySelectorAll('.d-tab')[1].classList.add('active');
-    }
-}
-
-// === КАРТЫ (LEAFLET) ===
+// --- Карта ---
 function initMap() {
-    const mapDiv = document.getElementById('map-container');
-    if(mapDiv && !map) {
-        map = L.map('map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '', maxZoom: 19
-        }).addTo(map);
-        centerMap();
-    }
+    map = L.map('map', { zoomControl: false }).setView([49.8019, 73.1021], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 }
 
-function initCityMap() {
-    const mapDiv = document.getElementById('city-map-container');
-    if(mapDiv && !cityMap) {
-        cityMap = L.map('city-map-container', { zoomControl: false }).setView([49.80, 73.10], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '', maxZoom: 19
-        }).addTo(cityMap);
-        
-        L.marker([49.805, 73.09]).addTo(cityMap).bindPopup("Кинотеатр Ленина");
-        L.marker([49.81, 73.11]).addTo(cityMap).bindPopup("Сити Молл");
-    }
+// --- AI и Заказ ---
+function toggleAiModal() {
+    const modal = document.getElementById('ai-modal');
+    modal.classList.toggle('active');
 }
 
-function centerMap() {
-    if(!map) { initMap(); return; }
-    map.locate({setView: true, maxZoom: 14});
-    
-    map.once('locationfound', (e) => {
-        if(userMarker) map.removeLayer(userMarker);
-        userMarker = L.marker(e.latlng).addTo(map);
-    });
+function handleAiInput(e) {
+    if(e.key === 'Enter') sendAiMessage();
 }
 
-// === ЧАТ И AI ===
-const chatInp = document.getElementById('chatInput');
-if(chatInp) {
-    chatInp.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-}
-
-function sendMessage() {
-    const input = document.getElementById('chatInput');
+function sendAiMessage() {
+    const input = document.getElementById('ai-input');
     const text = input.value.trim();
-    if (!text) return;
+    if(!text) return;
 
-    addMessageBubble(text, 'user');
+    addChatMessage('user', text);
     input.value = '';
 
-    setTimeout(() => aiReply(text), 800);
+    // Имитация ответа ИИ
+    setTimeout(() => {
+        addChatMessage('ai', "Принято! Ищу машину по адресу: " + text);
+        // Сворачиваем через 2 сек, чтобы пользователь увидел ответ
+        setTimeout(() => {
+            document.getElementById('ai-modal').classList.remove('active');
+        }, 1500);
+    }, 800);
 }
 
-function addMessageBubble(text, sender) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'ai-msg';
-
-    if (sender === 'user') {
-        msgDiv.style.justifyContent = 'flex-end';
-        msgDiv.innerHTML = `<div class="msg-bubble" style="background:var(--accent); color:white;">${text}</div>`;
-    } else {
-        msgDiv.innerHTML = `<div class="ai-avatar">Ai</div><div class="msg-bubble">${text}</div>`;
-    }
-
-    let container = document.querySelector('.chat-container');
-    container.appendChild(msgDiv);
-    container.scrollTop = container.scrollHeight;
-    if(tg) tg.HapticFeedback.selectionChanged();
+function addChatMessage(role, text) {
+    const box = document.getElementById('ai-chat-box');
+    const msg = document.createElement('div');
+    msg.className = `chat-msg ${role}`;
+    msg.innerText = text;
+    box.appendChild(msg);
+    box.scrollTop = box.scrollHeight;
 }
 
-function aiReply(text) {
-    let reply = "Ищу варианты...";
-    const lower = text.toLowerCase();
-    
-    if(lower.includes("привет")) reply = "Салем! Куда поедем?";
-    else if(lower.includes("розовое")) reply = "Включил тариф Lady. Женщина водитель скоро приедет.";
-    else if(lower.includes("кафе")) reply = "Показываю лучшие кафе на карте города.";
-    else if(lower.includes("межгород")) reply = "Открываю настройки межгорода. Выберите маршрут!";
-    
-    addMessageBubble(reply, 'ai');
-}
-
-// === ЗАКАЗ ТАКСИ ===
-function startOrder() {
-    const to = document.getElementById('order-to').value.trim();
-    
-    if (!to && !intercityRoute) {
-        if(tg) tg.showAlert("Укажите точку назначения или выберите межгород");
-        else alert("Укажите точку назначения");
-        return;
-    }
-
-    const tariffNames = {
-        economy: 'Эконом',
-        comfort: 'Комфорт',
-        business: 'Бизнес',
-        lady: 'Lady 🌸'
-    };
-
-    let orderText = `Заказ создан!\n\nТариф: ${tariffNames[selectedTariff] || 'Эконом'}`;
-    
-    if (intercityRoute) {
-        orderText += `\nМаршрут: ${intercityRoute.from} → ${intercityRoute.to}`;
-        orderText += `\nМест: ${intercityRoute.seats}`;
-    } else {
-        orderText += `\nКуда: ${to}`;
-    }
-    
-    if (orderComment) {
-        orderText += `\nКомментарий: ${orderComment}`;
-    }
-
-    if(tg) tg.showAlert(orderText);
-    else alert(orderText);
-}
-
-function saveComment() {
-    const input = document.getElementById('comment-input');
-    orderComment = input.value.trim();
-    
-    const display = document.getElementById('comment-display');
-    if (display) {
-        display.innerText = orderComment || 'Указать...';
-    }
-    
-    closeModal('comment-modal');
-}
-
+// --- Межгород ---
 function saveIntercity() {
-    const from = document.getElementById('intercity-from').value;
-    const to = document.getElementById('intercity-to').value;
-    const seats = document.getElementById('intercity-seats').value;
+    const from = document.getElementById('inter-from').value;
+    const to = document.getElementById('inter-to').value;
+    const seats = document.getElementById('inter-seats').value;
+    const price = document.getElementById('inter-price').value;
     
-    if (from === to) {
-        if(tg) tg.showAlert("Выберите разные города");
-        else alert("Выберите разные города");
+    intercityData = { from, to, seats, price };
+    document.getElementById('intercity-display').innerText = `${from} → ${to}`;
+    closeModal('intercity-modal');
+}
+
+function startOrder() {
+    const to = document.getElementById('order-to').value;
+    if(!to && !intercityData) {
+        alert("Укажите куда едем!");
         return;
     }
-    
-    intercityRoute = { from, to, seats };
-    
-    const display = document.getElementById('intercity-display');
-    if (display) {
-        display.innerText = `${from} → ${to}`;
+
+    if(intercityData) {
+        // Добавляем в ленту водителя
+        addOrderToDriver(intercityData);
+        alert("Заявка на межгород отправлена!");
+    } else {
+        alert(`Заказ принят! Тариф: ${selectedTariff}. Машина будет через 5 мин.`);
     }
-    
-    closeModal('intercity-modal');
-    if(tg) tg.showAlert(`Межгород: ${from} → ${to}, мест: ${seats}`);
+    document.getElementById('ai-modal').classList.remove('active');
 }
 
-// === КОШЕЛЕК И МОДАЛКИ ===
-function openWalletModal(type) {
-    const modal = document.getElementById('wallet-action-modal');
-    const title = document.getElementById('wallet-modal-title');
-    const qrView = document.getElementById('qr-view');
-    const inputs = document.getElementById('wallet-inputs');
-    
-    openModal('wallet-action-modal');
-
-    qrView.style.display = 'none';
-    inputs.style.display = 'block';
-
-    if (type === 'deposit') {
-        title.innerText = "Пополнение";
-    } else if (type === 'transfer') {
-        title.innerText = "Перевод";
-    } else if (type === 'qr') {
-        title.innerText = "Сканировать QR";
-        qrView.style.display = 'block';
-        inputs.style.display = 'none';
-    }
+function addOrderToDriver(data) {
+    const list = document.getElementById('intercity-orders-list');
+    const order = document.createElement('div');
+    order.className = 'order-card';
+    order.innerHTML = `
+        <div class="order-info">
+            <strong>${data.from} → ${data.to}</strong>
+            <span>Мест: ${data.seats} | ${data.price} ₸</span>
+        </div>
+        <button class="take-btn" onclick="this.parentElement.remove()">Взять</button>
+    `;
+    list.prepend(order);
+    // Убираем empty state если он был
+    const empty = list.querySelector('.empty-state');
+    if(empty) empty.remove();
 }
 
-// === ЛЕНТА (THREADS) ===
-const POSTS_KEY = 'aitax_posts_v1';
-
+// --- Посты ---
 function openCreatePostModal() {
-    openModal('create-post-modal');
-    const ta = document.getElementById('create-post-text');
-    const imgInput = document.getElementById('create-post-image');
-    const preview = document.getElementById('create-post-preview');
-
-    if (ta) ta.value = '';
-    if (imgInput) imgInput.value = '';
-    if (preview) { preview.innerHTML = ''; preview.classList.add('hidden'); }
-
-    setTimeout(() => ta?.focus(), 50);
+    document.getElementById('create-post-modal').classList.add('active');
 }
 
 function closeCreatePost() {
-    closeModal('create-post-modal');
-}
-
-function getProfileAvatarDataUrlOrNull() {
-    const el = document.querySelector('#sidebar-avatar img');
-    return el?.getAttribute('src') || null;
-}
-
-function getCurrentAuthor() {
-    const name = document.getElementById('profile-name')?.innerText?.trim() || 'Гость';
-    return { name, avatar: getProfileAvatarDataUrlOrNull() };
-}
-
-function loadPosts() {
-    try { return JSON.parse(localStorage.getItem(POSTS_KEY) || '[]'); }
-    catch { return []; }
-}
-
-function savePosts(posts) {
-    localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
-}
-
-function renderPosts() {
-    const stream = document.querySelector('.feed-stream');
-    if (!stream) return;
-
-    const staticCards = Array.from(stream.querySelectorAll('.post-card[data-static="1"]'));
-    if (staticCards.length === 0) {
-        stream.querySelectorAll('.post-card').forEach(c => c.dataset.static = "1");
-    }
-
-    stream.querySelectorAll('.post-card[data-demo="1"]').forEach(n => n.remove());
-
-    const posts = loadPosts();
-    posts.slice().reverse().forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'post-card';
-        card.dataset.demo = "1";
-        card.dataset.postId = p.id;
-
-        const avatarHtml = p.author.avatar
-            ? `<div class="avatar-circle" style="width:36px;height:36px;overflow:hidden;">
-                 <img src="${p.author.avatar}" style="width:100%;height:100%;object-fit:cover;">
-               </div>`
-            : `<div class="avatar-circle" style="width:36px; height:36px;">${(p.author.name || 'U')[0]}</div>`;
-
-        const imgHtml = p.image
-            ? `<div style="margin-top:12px;">
-                 <img src="${p.image}" style="width:100%;max-height:320px;object-fit:cover;border-radius:18px;border:1px solid var(--border);">
-               </div>`
-            : '';
-
-        card.innerHTML = `
-            <div class="post-head">
-                ${avatarHtml}
-                <div style="flex:1; margin-left:10px;">
-                    <div class="name-row">
-                        <span class="name">${escapeHtml(p.author.name)}</span>
-                    </div>
-                </div>
-                <div class="time">только что</div>
-                <button class="more-btn"><ion-icon name="ellipsis-horizontal"></ion-icon></button>
-            </div>
-
-            <div class="post-content">${escapeHtml(p.text)}</div>
-            ${imgHtml}
-
-            <div class="post-actions-bar">
-                <button class="act-btn" onclick="toggleLike('${p.id}')"><ion-icon name="${p.liked ? 'heart' : 'heart-outline'}"></ion-icon></button>
-                <button class="act-btn" onclick="openComments('${p.id}')"><ion-icon name="chatbubble-outline"></ion-icon></button>
-                <button class="act-btn" onclick="repost('${p.id}')"><ion-icon name="repeat-outline"></ion-icon></button>
-                <button class="act-btn" onclick="sharePost('${p.id}')"><ion-icon name="paper-plane-outline"></ion-icon></button>
-            </div>
-            <div class="likes-count">${p.likes || 0} лайков</div>
-        `;
-
-        stream.prepend(card);
-    });
+    document.getElementById('create-post-modal').classList.remove('active');
+    document.getElementById('post-text').value = '';
+    document.getElementById('post-preview-container').classList.add('hidden');
 }
 
 function submitPost() {
-    const textEl = document.getElementById('create-post-text');
-    const imgInput = document.getElementById('create-post-image');
-    const text = textEl?.value?.trim() || '';
-    if (!text && !imgInput?.files?.length) {
-        if (tg) tg.showAlert("Напишите текст или прикрепите фото");
-        else alert("Напишите текст или прикрепите фото");
-        return;
-    }
-
-    const author = getCurrentAuthor();
-    const post = {
-        id: String(Date.now()),
-        author,
-        text,
-        image: null,
-        likes: 0,
-        liked: false,
-        createdAt: Date.now()
-    };
-
-    const finalize = () => {
-        const posts = loadPosts();
-        posts.push(post);
-        savePosts(posts);
-        closeCreatePost();
-        renderPosts();
-        if (tg) tg.HapticFeedback.impactOccurred('medium');
-    };
-
-    if (imgInput?.files?.[0]) {
-        const reader = new FileReader();
-        reader.onload = (e) => { post.image = e.target.result; finalize(); };
-        reader.readAsDataURL(imgInput.files[0]);
-    } else {
-        finalize();
-    }
+    const text = document.getElementById('post-text').value;
+    if(!text) return;
+    
+    const feed = document.getElementById('posts-feed');
+    const post = document.createElement('div');
+    post.className = 'post-card';
+    post.innerHTML = `
+        <div class="post-header">
+            <div class="user-avatar-mini"></div>
+            <strong>Вы</strong>
+        </div>
+        <div class="post-content">${text}</div>
+        <div class="post-actions"><span>❤️ 0</span> <span>💬 0</span></div>
+    `;
+    feed.prepend(post);
+    closeCreatePost();
 }
 
-function toggleLike(postId) {
-    const posts = loadPosts();
-    const p = posts.find(x => x.id === postId);
-    if (!p) return;
-    p.liked = !p.liked;
-    p.likes = Math.max(0, (p.likes || 0) + (p.liked ? 1 : -1));
-    savePosts(posts);
-    renderPosts();
+// --- Прочее ---
+function renderPromoCards() {
+    const container = document.getElementById('promo-container');
+    const promos = [
+        { title: "Concert Show", desc: "Скидки 50% только сегодня!", color: "#1a1a1a" },
+        { title: "Aitax Food", desc: "Доставка из ресторанов за 20 мин", color: "#0044cc" },
+        { title: "Киноночь", desc: "Премьеры в эти выходные", color: "#cc0044" }
+    ];
+    container.innerHTML = promos.map(p => `
+        <div class="promo-card" style="background: ${p.color}">
+            <span class="badge">Promoted</span>
+            <h2>${p.title}</h2>
+            <p>${p.desc}</p>
+        </div>
+    `).join('');
 }
 
-function repost(postId) {
-    if (tg) tg.showAlert("Репост (Demo): скоро добавим выбор «в ленту / в чат города»");
-    else alert("Репост (Demo)");
+function switchDriverTab(type) {
+    document.querySelectorAll('.d-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.driver-content').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('driver-' + type).classList.add('active');
 }
 
-function sharePost(id) {
-    openCreatePostModal();
-}
-
-function openComments(postId) {
-    openModal('thread-view-modal');
-}
-
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, (m) => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    }[m]));
-}
-
-// Превью картинки в модалке
-document.addEventListener('change', (e) => {
-    if (e.target?.id !== 'create-post-image') return;
-    const file = e.target.files?.[0];
-    const preview = document.getElementById('create-post-preview');
-    if (!preview) return;
-
-    if (!file) { preview.innerHTML = ''; preview.classList.add('hidden'); return; }
-
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        preview.innerHTML = `<img src="${ev.target.result}">`;
-        preview.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-});
-
-// === ВОДИТЕЛЬ (ТОРГ) ===
-function openOrderNegotiation(id) {
-    openModal('order-negotiation-modal');
-}
-
-function offerMyPrice() {
-    const price = prompt("Введите вашу цену:");
-    if(price) {
-        document.querySelector('.offer-price-display').innerText = price + " ₸";
-        if(tg) tg.showAlert("Цена предложена клиенту");
-    }
-}
-
-function acceptPrice() {
-    closeModal('order-negotiation-modal');
-    if(tg) tg.showAlert("Вы взяли заказ!");
-}
-
-// === НАСТРОЙКИ ===
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-}
-
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
 function toggleLanguage() {
-    currentLang = currentLang === 'ru' ? 'kz' : 'ru';
-    document.getElementById('lang-label').innerText = `Язык: ${currentLang === 'ru' ? 'Русский' : 'Қазақша'}`;
-    
-    const v = document.getElementById('settings-lang-value');
-    if (v) v.innerText = (currentLang === 'ru') ? 'Русский' : 'Қазақша';
-    
-    if(tg) tg.showAlert(`Язык изменен на ${currentLang.toUpperCase()}`);
-}
-
-function toggleTheme() {
-    const body = document.body;
-    const bg = document.getElementById('background-layer');
-    
-    if (bg.style.background.includes('1c1c1e')) {
-        bg.style.background = 'radial-gradient(circle at 50% 30%, #2b0042, #0000 90%)';
-    } else {
-        bg.style.background = 'radial-gradient(circle at 50% 30%, #1c1c1e, #0000 90%)';
-    }
-    
-    if(tg) tg.showAlert("Тема изменена");
-}
-
-function logoutDemo() {
-    isGuest = true;
-    document.getElementById('profile-name').innerText = "Гость";
-    document.getElementById('profile-phone').innerText = "+7 ...";
-    document.getElementById('sidebar-avatar').innerHTML = `<ion-icon name="person"></ion-icon>`;
-    closeModal('settings-modal');
-    switchTab('feed');
-    if (tg) tg.showAlert("Вы вышли (Demo)");
-}
-
-// Загрузка аватарки
-const avatarInput = document.getElementById('avatar-input');
-if(avatarInput) {
-    avatarInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgUrl = e.target.result;
-                document.getElementById('sidebar-avatar').innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-}
-
-// === ОБЩИЕ ФУНКЦИИ МОДАЛОК ===
-function openModal(id) {
-    const m = document.getElementById(id);
-    if(m) { 
-        m.classList.remove('hidden'); 
-        setTimeout(() => m.classList.add('active'), 10);
-    }
-}
-
-function closeModal(id) {
-    const m = document.getElementById(id);
-    if(m) { 
-        m.classList.remove('active'); 
-        setTimeout(() => m.classList.add('hidden'), 300); 
-    }
+    const el = document.getElementById('lang-val');
+    el.innerText = el.innerText === 'Русский' ? 'English' : 'Русский';
 }
